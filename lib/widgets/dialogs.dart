@@ -23,6 +23,7 @@ class Dialogs {
           TextEditingController languageController = TextEditingController();
           TextEditingController formatController = TextEditingController();
           TextEditingController genderController = TextEditingController();
+          TextEditingController idController = TextEditingController();
           final formkey = GlobalKey<FormState>();
           List<String> genders_ = [];
           bool hasSubtitles = false;
@@ -33,7 +34,8 @@ class Dialogs {
                     title: const Text("Agregar Pelicula"),
                     constraints: const BoxConstraints(maxWidth: 400),
                     content: Stack(children: [
-                      SingleChildScrollView(child:Form(
+                      SingleChildScrollView(
+                          child: Form(
                         key: formkey,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -169,31 +171,59 @@ class Dialogs {
                             ),
                             Column(
                               children: [
-                                FilledButton(
-                                    child: Text("Buscar poster"),
-                                    onPressed: () async {
-                                      setState(() {
-                                        isLoading = true;
-                                      });
-                                      String title = originalTitleController.text
-                                          .trim()
-                                          .replaceAll(" ", "+").toLowerCase();
-                                      String? poster_;
-                                      var response = await get(Uri.parse(
-                                          "http://www.omdbapi.com/?i=${dotenv.env["POSTERi"] ?? ""}&apikey=${dotenv.env["POSTERKEY"] ?? ""}&t=$title&y=${year ?? 0}"));
-                                      print(response.body);
-                                      if (response.statusCode == 200) {
-                                        var body = jsonDecode(response.body);
-                                        if (body["Error"] == null) {
-                                          poster_ = body["Poster"];
-                                        }
-                                      }
-                                      setState(() {
-                                        isLoading = false;
-                                        poster = poster_;
-                                      });
-                                    }),
-                                poster == null ? SizedBox() : Image.network(poster ??"",)
+                                Row(children: [
+                                  FilledButton(
+                                      child: const Text("Buscar poster"),
+                                      onPressed: () async {
+                                        setState(() {
+                                          isLoading = true;
+                                        });
+                                        var poster_ = idController.text
+                                                .trim()
+                                                .isEmpty
+                                            ? await searchPosterByTitle(
+                                                originalTitleController.text,
+                                                year ?? 0)
+                                            : await searchPosterById(
+                                                idController.text.trim());
+                                        setState(() {
+                                          isLoading = false;
+                                          poster = poster_;
+                                        });
+                                      }),
+                                  poster == null
+                                      ? ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                              maxWidth: 100),
+                                          child: TextBox(
+                                            placeholder: "IMDB id",
+                                            controller: idController,
+                                            onEditingComplete: () async {
+                                              setState(() {
+                                                isLoading = true;
+                                              });
+                                              var poster_ =
+                                                  await searchPosterById(
+                                                      idController.text.trim());
+                                              setState(() {
+                                                isLoading = false;
+                                                poster = poster_;
+                                              });
+                                            },
+                                          ))
+                                      : FilledButton(
+                                          style: ButtonStyle(
+                                              backgroundColor:
+                                                  ButtonState.resolveWith(
+                                                      (states) => Colors.red)),
+                                          child: const Text("Eliminar poster"),
+                                          onPressed: () {})
+                                ]),
+                                poster == null
+                                    ? SizedBox()
+                                    : Image.network(
+                                        poster ?? "",
+                                      )
                               ],
                             )
                           ],
@@ -230,7 +260,8 @@ class Dialogs {
                                   folderController.text,
                                   formatController.text,
                                   languageController.text,
-                                  poster);
+                                  poster,
+                                  "");
                               bool isSaved = await context
                                   .read<DataProvider>()
                                   .saveMovie(movie);
@@ -368,4 +399,173 @@ class Dialogs {
                   ));
         });
   }
+
+  static showMovieInfo(BuildContext context, Movie movie) {
+    Navigator.push(
+        context,
+        PageRouteBuilder(
+            opaque: false,
+            barrierDismissible: true,
+            fullscreenDialog: true,
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) =>
+                    FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
+            pageBuilder: (c, _, __) => Container(
+                color: Colors.black.withOpacity(0.5),
+                child: ContentDialog(
+                  constraints:
+                      const BoxConstraints(minWidth: 450, maxWidth: 600),
+                  title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Hero(
+                            tag: "${movie.id}-title", child: Text(movie.title)),
+                        Text(
+                          movie.originalTitle,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w100),
+                        )
+                      ]),
+                  content: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Hero(
+                            tag: "${movie.id}-poster",
+                            child: movie.poster != null
+                                ? Image.network(movie.poster ?? "")
+                                : Image.asset("assets/poster.jpg")),
+                        const SizedBox(
+                          width: 8,
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                                width: 220,
+                                child: RichText(
+                                    text: TextSpan(children: [
+                                  const TextSpan(
+                                      text: "Director(es): ",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16)),
+                                  TextSpan(
+                                      text: movie.director,
+                                      style: const TextStyle(fontSize: 16))
+                                ]))),
+                            RichText(
+                                text: TextSpan(children: [
+                              const TextSpan(
+                                  text: "Lanzamiento: ",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                              TextSpan(
+                                  text: movie.launchDate.toString(),
+                                  style: const TextStyle(fontSize: 16)),
+                            ])),
+                            Wrap(
+                                children: movie.genders
+                                    .map((gender) => Padding(
+                                        padding: const EdgeInsets.only(
+                                            right: 5, top: 5),
+                                        child: Chip(
+                                          text: Text(gender),
+                                        )))
+                                    .toList()),
+                            const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Divider(
+                                  size: 220,
+                                )),
+                            RichText(
+                                text: TextSpan(children: [
+                              const TextSpan(
+                                  text: "Carpeta: \n",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                              TextSpan(
+                                  text: movie.folder,
+                                  style: const TextStyle(fontSize: 16)),
+                            ])),
+                            RichText(
+                                text: TextSpan(children: [
+                              const TextSpan(
+                                  text: "Formato: ",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                              TextSpan(
+                                  text: movie.format,
+                                  style: const TextStyle(fontSize: 16)),
+                            ])),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                RichText(
+                                    text: TextSpan(children: [
+                                  const TextSpan(
+                                      text: "Idioma: \n",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16)),
+                                  TextSpan(
+                                      text: movie.language,
+                                      style: const TextStyle(fontSize: 16)),
+                                ])),
+                                Checkbox(
+                                  checked: movie.subtitles,
+                                  onChanged: (v) {},
+                                  content: const Text("Subtitulos"),
+                                ),
+                              ],
+                            )
+                          ],
+                        )
+                      ]),
+                  actions: [
+                    Button(
+                        child: const Text("Cerrar"),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        })
+                  ],
+                ))));
+  }
+}
+
+Future<String?> searchPosterById(String id) async {
+  String? poster_;
+  var response = await get(Uri.parse(
+      "http://www.omdbapi.com/?i=$id&apikey=${dotenv.env["POSTERKEY"] ?? ""}"));
+  print(response.body);
+  if (response.statusCode == 200) {
+    var body = jsonDecode(response.body);
+    if (body["Error"] == null) {
+      poster_ = body["Poster"];
+    }
+  }
+  return poster_;
+}
+
+Future<String?> searchPosterByTitle(String title, int launchDate) async {
+  String title_ = title.trim().replaceAll(" ", "+").toLowerCase();
+  String? poster_;
+  var response = await get(Uri.parse(
+      "http://www.omdbapi.com/?i=${dotenv.env["POSTERi"] ?? ""}&apikey=${dotenv.env["POSTERKEY"] ?? ""}&t=$title_&y=$launchDate"));
+  print(response.body);
+  if (response.statusCode == 200) {
+    var body = jsonDecode(response.body);
+    if (body["Error"] == null) {
+      poster_ = body["Poster"];
+    }
+  }
+  return poster_;
 }
