@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class DataProvider with ChangeNotifier {
   bool isAuth = false;
   List<Movie> movies = [];
+  List<Movie> totalMovies = [];
   List<String> waitList = [];
   bool isLoading = false;
   User? user;
@@ -71,6 +72,7 @@ class DataProvider with ChangeNotifier {
     auth.signOut();
     movies.clear();
     waitList.clear();
+    user = null;
     await sharedPreferences.clear();
   }
 
@@ -78,7 +80,8 @@ class DataProvider with ChangeNotifier {
     var data = await ref!.get();
     for (Document movie in data) {
       var movieData = movie.map;
-      movies.add(Movie.fromJson(movieData));
+      movies.add(Movie.fromJson(movieData, movie.id));
+      totalMovies.add(Movie.fromJson(movieData, movie.id));
     }
     isLoading = false;
     notifyListeners();
@@ -86,8 +89,8 @@ class DataProvider with ChangeNotifier {
 
   Future<bool> saveMovie(Movie movie) async {
     try {
-      await ref!.add(movie.toJson());
-      movies.add(movie);
+      var newMovie = await ref!.add(movie.toJson());
+      movies.add(Movie.fromJson(movie.toJson(), newMovie.id));
       notifyListeners();
       return true;
     } catch (e) {
@@ -120,5 +123,63 @@ class DataProvider with ChangeNotifier {
       await login(m.split("|").reversed.join("@"),
           p.split("").reversed.join(""), false);
     }
+  }
+
+  void search(String value, SearchField field) {
+    print("$value");
+    switch (field) {
+      case SearchField.title:
+        List<Movie> results = [];
+        var withTitle = totalMovies.where(
+            (movie) => movie.title.toLowerCase().contains(value.toLowerCase()));
+        var withOriginalTitle = totalMovies.where((movie) =>
+            movie.originalTitle.toLowerCase().contains(value.toLowerCase()));
+        results.addAll(withTitle);
+        results.addAll(withOriginalTitle);
+        movies = results;
+        notifyListeners();
+        break;
+
+      case SearchField.director:
+        movies = totalMovies
+            .where((movie) =>
+                movie.director.toLowerCase().contains(value.toLowerCase()))
+            .toList();
+        notifyListeners();
+        break;
+
+      case SearchField.year:
+        movies = totalMovies
+            .where((movie) => movie.launchDate.toString() == value)
+            .toList();
+        notifyListeners();
+        break;
+    }
+  }
+
+  void searchByGender(List<String> genders_) {
+    List<Movie> result = [];
+    print(genders_);
+    if (genders_.isNotEmpty) {
+      for (String gender in genders_) {
+        print(gender);
+        for (Movie movie in totalMovies) {
+          var contains = movie.genders.contains(gender);
+          print(contains);
+          if (contains) {
+            result.add(movie);
+          }
+        }
+      }
+    } else {
+      result = totalMovies;
+    }
+    movies = result;
+    notifyListeners();
+  }
+
+  void resetSearch() {
+    movies = totalMovies;
+    notifyListeners();
   }
 }

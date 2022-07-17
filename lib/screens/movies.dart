@@ -1,6 +1,7 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_grid_list/responsive_grid_list.dart';
+import 'package:sibupel/data/movie.dart';
 import 'package:sibupel/data/provider.dart';
 import 'package:sibupel/widgets/cards.dart';
 import 'package:sibupel/widgets/dialogs.dart';
@@ -13,28 +14,131 @@ class MoviesScreen extends StatefulWidget {
 }
 
 class _MovieScreen extends State<MoviesScreen> {
+  Map<String, Map<String, dynamic>> searchOptions = {
+    "Titulo": {"field": SearchField.title, "icon": FluentIcons.text_field},
+    "Lanzamiento": {"field": SearchField.year, "icon": FluentIcons.calendar},
+    "Director": {"field": SearchField.director, "icon": FluentIcons.people}
+  };
+
+  Map<String, dynamic>? searchType;
+  TextEditingController searchController = TextEditingController();
+  List<String> genders_ = [];
+
   @override
   void initState() {
     super.initState();
-    print("inited movies screen");
+    setState(() {
+      searchType = searchOptions["Titulo"];
+    });
+  }
+
+  void search() {
+    context
+        .read<DataProvider>()
+        .search(searchController.text, searchType!["field"]);
   }
 
   @override
   Widget build(BuildContext context) {
     var movies = context.watch<DataProvider>().movies;
+    var user = context.watch<DataProvider>().user;
     return ScaffoldPage(
+      bottomBar: SizedBox(
+          height: 48,
+          child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: genders.length,
+              itemBuilder: (c, i) => genders_.contains(genders[i]["name"])
+                  ? Chip.selected(
+                      onPressed: () {
+                        int index = genders_.indexWhere(
+                            (element) => element == genders[i]["name"]);
+                        if (index > -1) {
+                          genders_.removeAt(index);
+                        }
+                        context.read<DataProvider>().searchByGender(genders_);
+                      },
+                      image: Text(genders[i]["emoji"] ?? ""),
+                      text: Text(genders[i]["name"] ?? ""))
+                  : Chip(
+                      onPressed: () {
+                        genders_.add(genders[i]["name"] ?? "non");
+
+                        context.read<DataProvider>().searchByGender(genders_);
+                      },
+                      image: Text(genders[i]["emoji"] ?? ""),
+                      text: Text(genders[i]["name"] ?? ""),
+                    ))),
       header: PageHeader(
         title: const Text("Mis Peliculas"),
-        commandBar: IconButton(
-          icon: const Icon(FluentIcons.add),
-          onPressed: () {
-            Dialogs.showAddMovieDialog(context);
-          },
-        ),
+        commandBar: Row(children: [
+          SizedBox(
+              width: 150,
+              child: Expanded(
+                  child: Combobox(
+                      value: searchType,
+                      onChanged: ((Map<String, dynamic>? value) {
+                        setState(() {
+                          searchType = value;
+                        });
+                      }),
+                      items: searchOptions.keys
+                          .map((e) => ComboboxItem(
+                                value: searchOptions[e],
+                                child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(searchOptions[e]?["icon"] ??
+                                          FluentIcons.a_a_d_logo),
+                                      const SizedBox(
+                                        width: 8,
+                                      ),
+                                      Text(e)
+                                    ]),
+                              ))
+                          .toList()))),
+          ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 250),
+              child: TextBox(
+                controller: searchController,
+                placeholder: "Buscar...",
+                prefix: const Icon(FluentIcons.search),
+                onEditingComplete: () {
+                  search();
+                },
+                suffix: searchController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(FluentIcons.clear),
+                        onPressed: () {
+                          searchController.text = "";
+                          context.read<DataProvider>().resetSearch();
+                        }),
+              )),
+          IconButton(
+            icon: const Icon(FluentIcons.add),
+            onPressed: () {
+              Dialogs.showAddMovieDialog(context);
+            },
+          )
+        ]),
       ),
-      content: ResponsiveGridList(horizontalGridMargin: 16,
-          minItemWidth: 200,
-          children: movies.map((movie) => MovieCard(movie: movie)).toList()),
+      content: user == null
+          ? Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Text("Click en "),
+                  Icon(FluentIcons.settings),
+                  Text(" para iniciar sesión")
+                ],
+              ),
+            )
+          : ResponsiveGridList(
+              horizontalGridMargin: 16,
+              minItemWidth: 200,
+              children:
+                  movies.map((movie) => MovieCard(movie: movie)).toList()),
     );
   }
 }

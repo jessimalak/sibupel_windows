@@ -10,6 +10,7 @@ class Movie {
   String format;
   String language;
   String? poster;
+  String id;
 
   Movie(
       this.title,
@@ -21,9 +22,11 @@ class Movie {
       this.subtitles,
       this.folder,
       this.format,
-      this.language, this.poster);
+      this.language,
+      this.poster,
+      this.id);
 
-  Movie.fromJson(Map<String, dynamic> data)
+  Movie.fromJson(Map<String, dynamic> data, String id_)
       : title = data["title"],
         originalTitle = data["originalTitle"],
         director = data["director"],
@@ -33,7 +36,9 @@ class Movie {
         folder = data["folder"],
         duration = data["duration"],
         format = data["format"],
-        language = data["language"], poster = data["poster"];
+        language = data["language"],
+        poster = data["poster"],
+        id = id_;
 
   Map<String, dynamic> toJson() {
     return {
@@ -54,4 +59,16 @@ class Movie {
 
 List<String> formats = ["avi", "mp4", "mkv"];
 
-List<Map<String, String>> genders = [{"name": "Terror", "icon": "😱"}];
+List<Map<String, String>> genders = [
+  {"name": "Terror", "emoji": "😱"},
+  {"name": "Comedia", "emoji": "😂"},
+  {"name": "Musical", "emoji": "🎶"},
+  {"name": "Acción", "emoji": "🔥"},
+  {"name": "Slasher", "emoji": "🔪"},
+  {"name": "Fantasia", "emoji": "🦄"},
+  {"name": "Ciencia Ficción", "emoji": "👾"},
+  {"name": "Superheroes", "emoji": "🦹🏻‍♀️"},
+  {"name": "Romance", "emoji": "💜"}
+];
+
+enum SearchField { title, director, year }
