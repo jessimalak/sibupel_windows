@@ -68,7 +68,9 @@ List<Map<String, String>> genders = [
   {"name": "Fantasia", "emoji": "🦄"},
   {"name": "Ciencia Ficción", "emoji": "👾"},
   {"name": "Superheroes", "emoji": "🦹🏻‍♀️"},
-  {"name": "Romance", "emoji": "💜"}
+  {"name": "Romance", "emoji": "💜"},
+  {"name": "Animación", "emoji": "🖌️"},
+  {"name": "Drama", "emoji": "😥"},
 ];
 
 enum SearchField { title, director, year }
