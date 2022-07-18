@@ -18,7 +18,8 @@ class DataProvider with ChangeNotifier {
   bool isLoading = false;
   User? user;
   List<int> years = [];
-  CollectionReference? ref;
+  CollectionReference? readyRef;
+  CollectionReference? waitRef;
   late SharedPreferences sharedPreferences;
   late StreamSubscription<bool> authState;
   late FirebaseAuth auth;
@@ -30,10 +31,6 @@ class DataProvider with ChangeNotifier {
     sharedPreferences = await SharedPreferences.getInstance();
     authState = auth.signInState.listen((isSigned) async {
       isAuth = isSigned;
-      print(isSigned);
-      if (isSigned) {
-        ref = Firestore.instance.collection(user?.id ?? "");
-      }
       notifyListeners();
     });
     for (int i = 1920; i <= DateTime.now().year; i++) {
@@ -57,7 +54,14 @@ class DataProvider with ChangeNotifier {
         String hidedData = await hideData(email, password);
         await sharedPreferences.setString("token", hidedData);
       }
-      ref = Firestore.instance.collection(user_.id);
+      readyRef = Firestore.instance
+          .collection(user_.id)
+          .document("pelis")
+          .collection("ready");
+      waitRef = Firestore.instance
+          .collection(user_.id)
+          .document("pelis")
+          .collection("wait");
       isLoading = true;
       notifyListeners();
       getMovies();
@@ -77,11 +81,16 @@ class DataProvider with ChangeNotifier {
   }
 
   void getMovies() async {
-    var data = await ref!.get();
-    for (Document movie in data) {
+    var fullData = await readyRef!.get();
+    for (Document movie in fullData) {
       var movieData = movie.map;
       movies.add(Movie.fromJson(movieData, movie.id));
       totalMovies.add(Movie.fromJson(movieData, movie.id));
+    }
+    var waitData = await waitRef!.get();
+    for (Document movie in waitData) {
+      var movieData = movie.map;
+      waitList.add(movieData["title"]);
     }
     isLoading = false;
     notifyListeners();
@@ -89,8 +98,20 @@ class DataProvider with ChangeNotifier {
 
   Future<bool> saveMovie(Movie movie) async {
     try {
-      var newMovie = await ref!.add(movie.toJson());
+      var newMovie = await readyRef!.add(movie.toJson());
       movies.add(Movie.fromJson(movie.toJson(), newMovie.id));
+      notifyListeners();
+      return true;
+    } catch (e) {
+      showToast(e.toString(), backgroundColor: Colors.red);
+    }
+    return false;
+  }
+
+  Future<bool> saveMovieToWait(String title) async {
+    try {
+      await waitRef!.add({"title": title});
+      waitList.add(title);
       notifyListeners();
       return true;
     } catch (e) {
@@ -125,36 +146,25 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-  void search(String value, SearchField field) {
-    print("$value");
-    switch (field) {
-      case SearchField.title:
-        List<Movie> results = [];
-        var withTitle = totalMovies.where(
-            (movie) => movie.title.toLowerCase().contains(value.toLowerCase()));
-        var withOriginalTitle = totalMovies.where((movie) =>
-            movie.originalTitle.toLowerCase().contains(value.toLowerCase()));
-        results.addAll(withTitle);
-        results.addAll(withOriginalTitle);
-        movies = results;
-        notifyListeners();
-        break;
-
-      case SearchField.director:
-        movies = totalMovies
-            .where((movie) =>
-                movie.director.toLowerCase().contains(value.toLowerCase()))
-            .toList();
-        notifyListeners();
-        break;
-
-      case SearchField.year:
-        movies = totalMovies
-            .where((movie) => movie.launchDate.toString() == value)
-            .toList();
-        notifyListeners();
-        break;
-    }
+  void searchByData(String value) {
+    List<Movie> results = [];
+    var withTitle = totalMovies.where(
+        (movie) => movie.title.toLowerCase().contains(value.toLowerCase()));
+    var withOriginalTitle = totalMovies.where((movie) =>
+        movie.originalTitle.toLowerCase().contains(value.toLowerCase()));
+    var byYear = totalMovies
+        .where((movie) => movie.launchDate.toString() == value)
+        .toList();
+    var byDirector = totalMovies
+        .where((movie) =>
+            movie.director.toLowerCase().contains(value.toLowerCase()))
+        .toList();
+    results.addAll(withTitle);
+    results.addAll(withOriginalTitle);
+    results.addAll(byYear);
+    results.addAll(byDirector);
+    movies = results;
+    notifyListeners();
   }
 
   void searchByGender(List<String> genders_) {

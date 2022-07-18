@@ -33,9 +33,7 @@ class _MovieScreen extends State<MoviesScreen> {
   }
 
   void search() {
-    context
-        .read<DataProvider>()
-        .search(searchController.text, searchType!["field"]);
+    context.read<DataProvider>().searchByData(searchController.text);
   }
 
   @override
@@ -72,31 +70,6 @@ class _MovieScreen extends State<MoviesScreen> {
       header: PageHeader(
         title: const Text("Mis Peliculas"),
         commandBar: Row(children: [
-          SizedBox(
-              width: 150,
-              child: Expanded(
-                  child: Combobox(
-                      value: searchType,
-                      onChanged: ((Map<String, dynamic>? value) {
-                        setState(() {
-                          searchType = value;
-                        });
-                      }),
-                      items: searchOptions.keys
-                          .map((e) => ComboboxItem(
-                                value: searchOptions[e],
-                                child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(searchOptions[e]?["icon"] ??
-                                          FluentIcons.a_a_d_logo),
-                                      const SizedBox(
-                                        width: 8,
-                                      ),
-                                      Text(e)
-                                    ]),
-                              ))
-                          .toList()))),
           ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 250),
               child: TextBox(

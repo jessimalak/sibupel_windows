@@ -220,7 +220,7 @@ class Dialogs {
                                           onPressed: () {})
                                 ]),
                                 poster == null
-                                    ? SizedBox()
+                                    ? const SizedBox()
                                     : Image.network(
                                         poster ?? "",
                                       )
@@ -233,9 +233,9 @@ class Dialogs {
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [Center(child: ProgressRing())],
+                              children: const [Center(child: ProgressRing())],
                             )
-                          : SizedBox()
+                          : const SizedBox()
                     ]),
                     actions: [
                       FilledButton(
@@ -245,9 +245,11 @@ class Dialogs {
                               setState(() {
                                 isLoading = true;
                               });
-                              for (String gender
-                                  in genderController.text.split(",")) {
-                                genders_.add(gender);
+                              if (genderController.text.trim().isNotEmpty) {
+                                for (String gender
+                                    in genderController.text.split(",")) {
+                                  genders_.add(gender);
+                                }
                               }
                               Movie movie = Movie(
                                   titleController.text,
@@ -538,6 +540,70 @@ class Dialogs {
                         })
                   ],
                 ))));
+  }
+
+  static showWaitList(BuildContext context) {
+    showDialog(
+        context: context,
+        builder: (c) {
+          var movies = context.watch<DataProvider>().waitList;
+          return StatefulBuilder(
+              builder: (context, setState) => ContentDialog(
+                    title: Text("Lista de espera"),
+                    constraints:
+                        const BoxConstraints(maxWidth: 368, maxHeight: 600),
+                    content: movies.isEmpty
+                        ? const Text("Sin peliculas en lista de espera")
+                        : ListView.builder(
+                            itemCount: movies.length,
+                            itemBuilder: (c, i) => ListTile(
+                                  title: Text(movies[i]),
+                                )),
+                    actions: [
+                      FilledButton(
+                          child: const Text("Agregar"),
+                          onPressed: () async {
+                            var result = await showDialog<String?>(
+                                context: context,
+                                builder: (c) {
+                                  TextEditingController controller =
+                                      TextEditingController();
+                                  return ContentDialog(
+                                    title: const Text("Agregar pelicula"),
+                                    content: TextBox(
+                                      placeholder: "Título",
+                                      controller: controller,
+                                    ),
+                                    actions: [
+                                      FilledButton(
+                                          child: const Text("Guardar"),
+                                          onPressed: () {
+                                            Navigator.pop(
+                                                context, controller.text);
+                                          }),
+                                      Button(
+                                          child: Text("Cancelar"),
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          })
+                                    ],
+                                  );
+                                });
+                            if (result != null) {
+                              await context
+                                  .read<DataProvider>()
+                                  .saveMovieToWait(result);
+                              setState(() {});
+                            }
+                          }),
+                      Button(
+                          child: const Text("Cerrar"),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          })
+                    ],
+                  ));
+        });
   }
 }
 
