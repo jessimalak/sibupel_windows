@@ -33,7 +33,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (BuildContext context) => DataProvider(),
-      child: OKToast(child: FluentApp(
+      child: OKToast(
+          child: FluentApp(
         title: 'Sibupel',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(brightness: Brightness.dark, accentColor: Colors.teal),
@@ -77,7 +78,10 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   Widget build(BuildContext context) {
     return NavigationView(
         appBar: NavigationAppBar(
-            automaticallyImplyLeading: false,
+            leading: Image.asset(
+              "assets/app_icon.ico",
+              height: 24,
+            ),
             title: const DragToMoveArea(
                 child: Align(
                     alignment: AlignmentDirectional.centerStart,
@@ -86,6 +90,11 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
               children: [
                 const Spacer(),
                 IconButton(
+                    icon: const Icon(FluentIcons.note_pinned),
+                    onPressed: () {
+                      Dialogs.showWaitList(context);
+                    }),
+                IconButton(
                     icon: const Icon(FluentIcons.settings),
                     onPressed: () {
                       Dialogs.showSettingsDialog(context);
@@ -93,24 +102,9 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                 const WindowButtons()
               ],
             )),
-        pane: NavigationPane(
-          selected: index,
-          onChanged: (i) {
-            setScreen(i);
-          },
-          displayMode: PaneDisplayMode.compact,
-          items: [
-            PaneItem(
-                icon: const Icon(FluentIcons.my_movies_t_v),
-                title: const Text("Mis pelis")),
-            PaneItem(
-                icon: const Icon(FluentIcons.note_pinned),
-                title: const Text("Lista de espera"))
-          ],
-        ),
         content: NavigationBody(
           index: index,
-          children: [MoviesScreen(), ListScreen()],
+          children: const [MoviesScreen()],
         )
         // This trailing comma makes auto-formatting nicer for build methods.
         );
