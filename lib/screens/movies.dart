@@ -40,6 +40,7 @@ class _MovieScreen extends State<MoviesScreen> {
   Widget build(BuildContext context) {
     var movies = context.watch<DataProvider>().movies;
     var user = context.watch<DataProvider>().user;
+    var isLoading = context.watch<DataProvider>().isLoading;
     return ScaffoldPage(
       bottomBar: SizedBox(
           height: 48,
@@ -68,7 +69,14 @@ class _MovieScreen extends State<MoviesScreen> {
                       text: Text(genders[i]["name"] ?? ""),
                     ))),
       header: PageHeader(
-        title: Text("Mis Peliculas (${movies.length})"),
+        title: RichText(
+          text: TextSpan(children: [
+            const TextSpan(
+                text: "Mis Peliculas ",
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w600)),
+            TextSpan(text: "(${movies.length})")
+          ]),
+        ),
         commandBar: Row(children: [
           ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 250),
@@ -91,7 +99,9 @@ class _MovieScreen extends State<MoviesScreen> {
           IconButton(
             icon: const Icon(FluentIcons.add),
             onPressed: () {
-              Dialogs.showAddMovieDialog(context);
+              if (context.read<DataProvider>().isAuth) {
+                Dialogs.showAddMovieDialog(context);
+              }
             },
           )
         ]),
@@ -107,11 +117,25 @@ class _MovieScreen extends State<MoviesScreen> {
                 ],
               ),
             )
-          : ResponsiveGridList(
-              horizontalGridMargin: 16,
-              minItemWidth: 200,
-              children:
-                  movies.map((movie) => MovieCard(movie: movie)).toList()),
+          : isLoading
+              ? SingleChildScrollView(
+                  child: Wrap(
+                  children: const [
+                    ShimmerCard(),
+                    ShimmerCard(),
+                    ShimmerCard(),
+                    ShimmerCard(),
+                    ShimmerCard(),
+                    ShimmerCard(),
+                    ShimmerCard(),
+                    ShimmerCard(),
+                  ],
+                ))
+              : ResponsiveGridList(
+                  horizontalGridMargin: 16,
+                  minItemWidth: 200,
+                  children:
+                      movies.map((movie) => MovieCard(movie: movie)).toList()),
     );
   }
 }
