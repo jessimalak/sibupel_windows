@@ -13,8 +13,10 @@ import 'package:window_manager/window_manager.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
-  WindowOptions options =
-      const WindowOptions(minimumSize: Size(755, 550), titleBarStyle: TitleBarStyle.hidden, skipTaskbar: false);
+  WindowOptions options = const WindowOptions(
+      minimumSize: Size(755, 550),
+      titleBarStyle: TitleBarStyle.hidden,
+      skipTaskbar: false);
   windowManager.waitUntilReadyToShow(options, () async {
     await windowManager.show();
   });
@@ -79,10 +81,47 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
               "assets/app_icon.ico",
               height: 24,
             ),
-            title: const DragToMoveArea(child: Align(alignment: AlignmentDirectional.centerStart, child: Text("Sibupel"))),
+            title: const DragToMoveArea(
+                child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text("Sibupel"))),
             actions: Row(
               children: [
                 const Spacer(),
+                IconButton(
+                    icon: const Icon(FluentIcons.info),
+                    onPressed: () {
+                      showGeneralDialog(
+                          barrierLabel: "label",
+                          barrierDismissible: true,
+                          context: context,
+                          pageBuilder:
+                              ((context, animation, secondaryAnimation) =>
+                                  ContentDialog(
+                                    title: const Text("Acerca de Sibupel"),
+                                    content: Row(children: [
+                                      Image.asset(
+                                        "assets/app_icon.ico",
+                                        height: 56,
+                                      ),
+                                      const SizedBox(
+                                        width: 16,
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: const [
+                                          Text(
+                                            "Versión 1.0.5",
+                                            style: TextStyle(fontSize: 18),
+                                          ),
+                                          Text("Developed by Malak;")
+                                        ],
+                                      )
+                                    ]),
+                                  )));
+                    }),
                 IconButton(
                     icon: const Icon(FluentIcons.note_pinned),
                     onPressed: () {
