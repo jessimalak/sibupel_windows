@@ -5,7 +5,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:provider/provider.dart';
 import 'package:sibupel/data/provider.dart';
-import 'package:sibupel/screens/list.dart';
 import 'package:sibupel/screens/movies.dart';
 import 'package:sibupel/widgets/dialogs.dart';
 import 'package:sibupel/widgets/window.dart';
@@ -14,10 +13,8 @@ import 'package:window_manager/window_manager.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
-  WindowOptions options = const WindowOptions(
-      minimumSize: Size(755, 550),
-      titleBarStyle: TitleBarStyle.hidden,
-      skipTaskbar: false);
+  WindowOptions options =
+      const WindowOptions(minimumSize: Size(755, 550), titleBarStyle: TitleBarStyle.hidden, skipTaskbar: false);
   windowManager.waitUntilReadyToShow(options, () async {
     await windowManager.show();
   });
@@ -82,10 +79,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
               "assets/app_icon.ico",
               height: 24,
             ),
-            title: const DragToMoveArea(
-                child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Text("Sibupel"))),
+            title: const DragToMoveArea(child: Align(alignment: AlignmentDirectional.centerStart, child: Text("Sibupel"))),
             actions: Row(
               children: [
                 const Spacer(),
