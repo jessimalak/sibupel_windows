@@ -68,7 +68,7 @@ class _MovieScreen extends State<MoviesScreen> {
                       text: Text(genders[i]["name"] ?? ""),
                     ))),
       header: PageHeader(
-        title: const Text("Mis Peliculas"),
+        title: Text("Mis Peliculas (${movies.length})"),
         commandBar: Row(children: [
           ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 250),
