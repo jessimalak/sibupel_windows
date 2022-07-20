@@ -14,7 +14,7 @@ class DataProvider with ChangeNotifier {
   bool isAuth = false;
   List<Movie> movies = [];
   List<Movie> totalMovies = [];
-  List<String> waitList = [];
+  List<WaitMovie> waitList = [];
   bool isLoading = false;
   User? user;
   List<int> years = [];
@@ -90,7 +90,7 @@ class DataProvider with ChangeNotifier {
     var waitData = await waitRef!.get();
     for (Document movie in waitData) {
       var movieData = movie.map;
-      waitList.add(movieData["title"]);
+      waitList.add(WaitMovie(movieData["title"], movie.id));
     }
     isLoading = false;
     notifyListeners();
@@ -99,7 +99,9 @@ class DataProvider with ChangeNotifier {
   Future<bool> saveMovie(Movie movie) async {
     try {
       var newMovie = await readyRef!.add(movie.toJson());
-      movies.add(Movie.fromJson(movie.toJson(), newMovie.id));
+      var movieToAdd = Movie.fromJson(movie.toJson(), newMovie.id);
+      movies.add(movieToAdd);
+      totalMovies.add(movieToAdd);
       notifyListeners();
       return true;
     } catch (e) {
@@ -108,16 +110,55 @@ class DataProvider with ChangeNotifier {
     return false;
   }
 
+  Future<bool> updateMovie(Movie movie)async{
+    try{
+      await readyRef!.document(movie.id).update(movie.toJson());
+      int totalIndex = totalMovies.indexWhere((old) => old.id == movie.id);
+      int dataIndex = movies.indexWhere((old) => old.id == movie.id);
+      totalMovies[totalIndex] = movie;
+      movies[dataIndex] = movie;
+      notifyListeners();
+      return true;
+    }catch(e){
+      showToast(e.toString(), backgroundColor: Colors.red);
+    }
+    return false;
+  }
+
+  Future<void> deleteMovie(String id)async{
+    try{
+      await readyRef!.document(id).delete();
+      int totalIndex = totalMovies.indexWhere((old) => old.id == id);
+      int dataIndex = movies.indexWhere((old) => old.id == id);
+      totalMovies.removeAt(totalIndex);
+      movies.removeAt(dataIndex);
+      notifyListeners();
+    }catch(e){
+      showToast(e.toString(), backgroundColor: Colors.red);
+    }
+  }
+
   Future<bool> saveMovieToWait(String title) async {
     try {
-      await waitRef!.add({"title": title});
-      waitList.add(title);
+      var newMovie = await waitRef!.add({"title": title});
+      waitList.add(WaitMovie(title, newMovie.id));
       notifyListeners();
       return true;
     } catch (e) {
       showToast(e.toString(), backgroundColor: Colors.red);
     }
     return false;
+  }
+
+  Future<void> deleteWaitMovie(String id)async{
+    try{
+      await waitRef!.document(id).delete();
+      int index = waitList.indexWhere((element) => element.id ==  id);
+      waitList.removeAt(index);
+      notifyListeners();
+    }catch(e){
+      showToast(e.toString(), backgroundColor: Colors.red);
+    }
   }
 
   Future<String> hideData(String m, String p) async {
@@ -163,7 +204,7 @@ class DataProvider with ChangeNotifier {
     results.addAll(withOriginalTitle);
     results.addAll(byYear);
     results.addAll(byDirector);
-    movies = results;
+    movies = results.toSet().toList();
     notifyListeners();
   }
 

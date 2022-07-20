@@ -1,4 +1,5 @@
-import 'package:fluent_ui/fluent_ui.dart';
+import 'package:fluent_ui/fluent_ui.dart' hide MenuItem;
+import 'package:native_context_menu/native_context_menu.dart' as cm;
 import 'package:sibupel/widgets/dialogs.dart';
 
 import '../data/movie.dart';
@@ -14,6 +15,16 @@ class MovieCard extends StatelessWidget {
             onTap: () {
               Dialogs.showMovieInfo(context, movie);
             },
+            child: cm.ContextMenuRegion(onItemSelected: (item){
+              switch(item.title){
+                case "Actualizar":
+                  Dialogs.showAddMovieDialog(context, movie: movie);
+                  break;
+                case "Eliminar":
+                  Dialogs.showDeleteMovieConfirmation(context, movie);
+                  break;
+              }
+            },menuItems: [cm.MenuItem(title: "Actualizar"), cm.MenuItem(title: "Eliminar")],
             child: Card(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -21,7 +32,21 @@ class MovieCard extends StatelessWidget {
                   Hero(
                       tag: "${movie.id}-poster",
                       child: movie.poster != null
-                          ? Image.network(movie.poster ?? "")
+                          ? Image.network(
+                              movie.poster ?? "", errorBuilder: (c, obj, stake)=> Image.asset("assets/poster.jpg"),
+                              loadingBuilder: (c, child, progress) =>
+                                  progress == null
+                                      ? child
+                                      : const SizedBox(
+                                          width: 200,
+                                          height: 300,
+                                          child: Center(
+                                              child: SizedBox(
+                                                  width: 80,
+                                                  height: 80,
+                                                  child: ProgressRing())),
+                                        ),
+                            )
                           : Image.asset("assets/poster.jpg")),
                   Hero(
                       tag: "${movie.id}-title",
@@ -32,10 +57,12 @@ class MovieCard extends StatelessWidget {
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                       )),
-                  Text(movie.director),
+                  Text(movie.director, textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
                 ],
               ),
-            )),
+            ))),
         Positioned(
             top: 0,
             right: 0,

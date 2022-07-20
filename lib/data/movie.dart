@@ -57,6 +57,13 @@ class Movie {
   }
 }
 
+class WaitMovie{
+  String name;
+  String id;
+
+  WaitMovie(this.name, this.id);
+}
+
 List<String> formats = ["avi", "mp4", "mkv"];
 
 List<Map<String, String>> genders = [
