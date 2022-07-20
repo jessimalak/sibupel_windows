@@ -110,8 +110,8 @@ class DataProvider with ChangeNotifier {
     return false;
   }
 
-  Future<bool> updateMovie(Movie movie)async{
-    try{
+  Future<bool> updateMovie(Movie movie) async {
+    try {
       await readyRef!.document(movie.id).update(movie.toJson());
       int totalIndex = totalMovies.indexWhere((old) => old.id == movie.id);
       int dataIndex = movies.indexWhere((old) => old.id == movie.id);
@@ -119,21 +119,21 @@ class DataProvider with ChangeNotifier {
       movies[dataIndex] = movie;
       notifyListeners();
       return true;
-    }catch(e){
+    } catch (e) {
       showToast(e.toString(), backgroundColor: Colors.red);
     }
     return false;
   }
 
-  Future<void> deleteMovie(String id)async{
-    try{
+  Future<void> deleteMovie(String id) async {
+    try {
       await readyRef!.document(id).delete();
       int totalIndex = totalMovies.indexWhere((old) => old.id == id);
       int dataIndex = movies.indexWhere((old) => old.id == id);
       totalMovies.removeAt(totalIndex);
       movies.removeAt(dataIndex);
       notifyListeners();
-    }catch(e){
+    } catch (e) {
       showToast(e.toString(), backgroundColor: Colors.red);
     }
   }
@@ -150,13 +150,13 @@ class DataProvider with ChangeNotifier {
     return false;
   }
 
-  Future<void> deleteWaitMovie(String id)async{
-    try{
+  Future<void> deleteWaitMovie(String id) async {
+    try {
       await waitRef!.document(id).delete();
-      int index = waitList.indexWhere((element) => element.id ==  id);
+      int index = waitList.indexWhere((element) => element.id == id);
       waitList.removeAt(index);
       notifyListeners();
-    }catch(e){
+    } catch (e) {
       showToast(e.toString(), backgroundColor: Colors.red);
     }
   }
