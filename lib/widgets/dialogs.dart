@@ -191,14 +191,21 @@ class Dialogs {
                                         setState(() {
                                           isLoading = true;
                                         });
-                                        var poster_ = idController.text
-                                                .trim()
-                                                .isEmpty
-                                            ? await searchPosterByTitle(
-                                                originalTitleController.text,
-                                                year ?? 0)
-                                            : await searchPosterById(
+                                        String? poster_;
+                                        String id = idController.text.trim();
+                                        if (id.isEmpty) {
+                                          poster_ = await searchPosterByTitle(
+                                              originalTitleController.text,
+                                              year ?? 0);
+                                        } else {
+                                          if (id.contains("https://")) {
+                                            poster_ = id;
+                                          } else {
+                                            poster_ = await searchPosterById(
                                                 idController.text.trim());
+                                          }
+                                        }
+
                                         setState(() {
                                           isLoading = false;
                                           poster = poster_;
@@ -207,17 +214,23 @@ class Dialogs {
                                   poster == null
                                       ? ConstrainedBox(
                                           constraints: const BoxConstraints(
-                                              maxWidth: 100),
+                                              maxWidth: 150),
                                           child: TextBox(
-                                            placeholder: "IMDB id",
+                                            placeholder: "IMDB id / img Url",
                                             controller: idController,
                                             onEditingComplete: () async {
                                               setState(() {
                                                 isLoading = true;
                                               });
-                                              var poster_ =
-                                                  await searchPosterById(
-                                                      idController.text.trim());
+                                              String id =
+                                                  idController.text.trim();
+                                              String? poster_;
+                                              if (id.contains("https://")) {
+                                                poster_ = id;
+                                              } else {
+                                                poster_ =
+                                                    await searchPosterById(id);
+                                              }
                                               setState(() {
                                                 isLoading = false;
                                                 poster = poster_;
