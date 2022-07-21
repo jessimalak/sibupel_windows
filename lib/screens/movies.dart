@@ -39,7 +39,7 @@ class _MovieScreen extends State<MoviesScreen> {
   @override
   Widget build(BuildContext context) {
     var movies = context.watch<DataProvider>().movies;
-    var user = context.watch<DataProvider>().user;
+    var isAuth = context.watch<DataProvider>().isAuth;
     var isLoading = context.watch<DataProvider>().isLoading;
     return ScaffoldPage(
       bottomBar: SizedBox(
@@ -50,8 +50,7 @@ class _MovieScreen extends State<MoviesScreen> {
               itemBuilder: (c, i) => genders_.contains(genders[i]["name"])
                   ? Chip.selected(
                       onPressed: () {
-                        int index = genders_.indexWhere(
-                            (element) => element == genders[i]["name"]);
+                        int index = genders_.indexWhere((element) => element == genders[i]["name"]);
                         if (index > -1) {
                           genders_.removeAt(index);
                         }
@@ -71,9 +70,7 @@ class _MovieScreen extends State<MoviesScreen> {
       header: PageHeader(
         title: RichText(
           text: TextSpan(children: [
-            const TextSpan(
-                text: "Mis Peliculas ",
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w600)),
+            const TextSpan(text: "Mis Peliculas ", style: TextStyle(fontSize: 32, fontWeight: FontWeight.w600)),
             TextSpan(text: "(${movies.length})")
           ]),
         ),
@@ -106,15 +103,11 @@ class _MovieScreen extends State<MoviesScreen> {
           )
         ]),
       ),
-      content: user == null
+      content: !isAuth
           ? Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Text("Click en "),
-                  Icon(FluentIcons.settings),
-                  Text(" para iniciar sesión")
-                ],
+                children: const [Text("Click en "), Icon(FluentIcons.settings), Text(" para iniciar sesión")],
               ),
             )
           : isLoading
@@ -131,11 +124,14 @@ class _MovieScreen extends State<MoviesScreen> {
                     ShimmerCard(),
                   ],
                 ))
-              : ResponsiveGridList(
-                  horizontalGridMargin: 16,
-                  minItemWidth: 200,
-                  children:
-                      movies.map((movie) => MovieCard(movie: movie)).toList()),
+              : movies.isEmpty
+                  ? const Center(
+                      child: Text("Sin peliculas"),
+                    )
+                  : ResponsiveGridList(
+                      horizontalGridMargin: 16,
+                      minItemWidth: 200,
+                      children: movies.map((movie) => MovieCard(movie: movie)).toList()),
     );
   }
 }
