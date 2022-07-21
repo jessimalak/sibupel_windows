@@ -113,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                                         mainAxisSize: MainAxisSize.min,
                                         children: const [
                                           Text(
-                                            "Versión 1.0.5",
+                                            "Versión 1.0.7",
                                             style: TextStyle(fontSize: 18),
                                           ),
                                           Text("Developed by Malak;")
