@@ -101,7 +101,9 @@ class DataProvider with ChangeNotifier {
       var newMovie = await readyRef!.add(movie.toJson());
       var movieToAdd = Movie.fromJson(movie.toJson(), newMovie.id);
       movies.add(movieToAdd);
+      movies = movies.toSet().toList();
       totalMovies.add(movieToAdd);
+      totalMovies = totalMovies.toSet().toList();
       notifyListeners();
       return true;
     } catch (e) {
