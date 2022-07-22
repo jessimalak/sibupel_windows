@@ -539,7 +539,10 @@ class Dialogs {
                         : ListView.builder(
                             itemCount: movies.length,
                             itemBuilder: (c, i) => ListTile(
-                                  title: Text(movies[i].name),
+                                  title: Text(
+                                    movies[i].name,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                   trailing: isLoadingId == movies[i].id
                                       ? const ProgressRing()
                                       : IconButton(
