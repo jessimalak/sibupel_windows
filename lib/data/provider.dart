@@ -90,7 +90,7 @@ class DataProvider with ChangeNotifier {
     }
     var waitData = await waitRef!.get();
     for (Document movie in waitData) {
-      bool isDownloaded = totalMovies.indexWhere((element) => element.id == movie.id) > -1 ? true : false;
+      bool isDownloaded = waitList.indexWhere((element) => element.id == movie.id) > -1 ? true : false;
       if (!isDownloaded) {
         var movieData = movie.map;
         await sharedPreferences.setString("wait_${movie.id}", movieData["title"]);
@@ -112,6 +112,7 @@ class DataProvider with ChangeNotifier {
         } else {
           WaitMovie movie = WaitMovie(encoded, movieKey.replaceFirst("wait_", ""));
           waitList.add(movie);
+          waitList = waitList.toSet().toList();
         }
       }
     }
@@ -249,7 +250,7 @@ class DataProvider with ChangeNotifier {
     } else {
       result = totalMovies;
     }
-    movies = result;
+    movies = result.toSet().toList();
     notifyListeners();
   }
 
