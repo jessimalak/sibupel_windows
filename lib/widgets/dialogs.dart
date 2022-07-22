@@ -16,8 +16,7 @@ class Dialogs {
         builder: (c) {
           bool isLoading = false;
           TextEditingController titleController = TextEditingController();
-          TextEditingController originalTitleController =
-              TextEditingController();
+          TextEditingController originalTitleController = TextEditingController();
           TextEditingController directorController = TextEditingController();
           TextEditingController folderController = TextEditingController();
           TextEditingController durationController = TextEditingController();
@@ -42,8 +41,7 @@ class Dialogs {
 
           return StatefulBuilder(
               builder: (c, setState) => ContentDialog(
-                    title: Text(
-                        "${movie == null ? "Agregar" : "Editar"} Pelicula"),
+                    title: Text("${movie == null ? "Agregar" : "Editar"} Pelicula"),
                     constraints: const BoxConstraints(maxWidth: 400),
                     content: Stack(children: [
                       SingleChildScrollView(
@@ -88,8 +86,7 @@ class Dialogs {
                                   items: context
                                       .read<DataProvider>()
                                       .years
-                                      .map((e) => ComboboxItem<int>(
-                                          value: e, child: Text(e.toString())))
+                                      .map((e) => ComboboxItem<int>(value: e, child: Text(e.toString())))
                                       .toList(),
                                   onChanged: (val) {
                                     setState(() {
@@ -107,15 +104,18 @@ class Dialogs {
                                             genderController.text = "";
                                           });
                                         },
-                                        items: genders
-                                            .map((e) => e["name"] ?? "")
-                                            .toList()))
+                                        items: genders.map((e) => e["name"] ?? "").toList()))
                               ],
                             ),
                             Wrap(
                               children: genders_
                                   .map((e) => Chip(
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          int index = genders_.indexWhere((element) => element == e);
+                                          setState(() {
+                                            genders_.removeAt(index);
+                                          });
+                                        },
                                         text: Text(e),
                                       ))
                                   .toList(),
@@ -194,15 +194,12 @@ class Dialogs {
                                         String? poster_;
                                         String id = idController.text.trim();
                                         if (id.isEmpty) {
-                                          poster_ = await searchPosterByTitle(
-                                              originalTitleController.text,
-                                              year ?? 0);
+                                          poster_ = await searchPosterByTitle(originalTitleController.text, year ?? 0);
                                         } else {
                                           if (id.contains("https://")) {
                                             poster_ = id;
                                           } else {
-                                            poster_ = await searchPosterById(
-                                                idController.text.trim());
+                                            poster_ = await searchPosterById(idController.text.trim());
                                           }
                                         }
 
@@ -213,8 +210,7 @@ class Dialogs {
                                       }),
                                   poster == null
                                       ? ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                              maxWidth: 150),
+                                          constraints: const BoxConstraints(maxWidth: 150),
                                           child: TextBox(
                                             placeholder: "IMDB id / img Url",
                                             controller: idController,
@@ -222,14 +218,12 @@ class Dialogs {
                                               setState(() {
                                                 isLoading = true;
                                               });
-                                              String id =
-                                                  idController.text.trim();
+                                              String id = idController.text.trim();
                                               String? poster_;
                                               if (id.contains("https://")) {
                                                 poster_ = id;
                                               } else {
-                                                poster_ =
-                                                    await searchPosterById(id);
+                                                poster_ = await searchPosterById(id);
                                               }
                                               setState(() {
                                                 isLoading = false;
@@ -238,14 +232,11 @@ class Dialogs {
                                             },
                                           ))
                                       : FilledButton(
-                                          style: ButtonStyle(backgroundColor:
-                                              ButtonState.resolveWith((states) {
-                                            if (states.contains(
-                                                ButtonStates.pressing)) {
+                                          style: ButtonStyle(backgroundColor: ButtonState.resolveWith((states) {
+                                            if (states.contains(ButtonStates.pressing)) {
                                               return const Color(0xFF770606);
                                             }
-                                            if (states.contains(
-                                                ButtonStates.hovering)) {
+                                            if (states.contains(ButtonStates.hovering)) {
                                               return const Color(0xFFE43737);
                                             }
                                             return const Color(0xFFBD1717);
@@ -284,8 +275,7 @@ class Dialogs {
                                 isLoading = true;
                               });
                               if (genderController.text.trim().isNotEmpty) {
-                                for (String gender
-                                    in genderController.text.split(",")) {
+                                for (String gender in genderController.text.split(",")) {
                                   if (!genders_.contains(gender.trim())) {
                                     genders_.add(gender);
                                   }
@@ -305,12 +295,8 @@ class Dialogs {
                                   poster,
                                   movie?.id ?? "");
                               bool isSaved = movie != null
-                                  ? await context
-                                      .read<DataProvider>()
-                                      .updateMovie(movie_)
-                                  : await context
-                                      .read<DataProvider>()
-                                      .saveMovie(movie_);
+                                  ? await context.read<DataProvider>().updateMovie(movie_)
+                                  : await context.read<DataProvider>().saveMovie(movie_);
                               if (isSaved) {
                                 Navigator.pop(context);
                               } else {
@@ -366,10 +352,7 @@ class Dialogs {
                                               });
                                               var user_ = await context
                                                   .read<DataProvider>()
-                                                  .login(
-                                                      mailController.text,
-                                                      passwordController.text,
-                                                      false);
+                                                  .login(mailController.text, passwordController.text, false);
                                               setState_(() {
                                                 isLoading = false;
                                               });
@@ -385,50 +368,34 @@ class Dialogs {
                         : Column(mainAxisSize: MainAxisSize.min, children: [
                             Text(user.email ?? ""),
                             Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 16),
+                                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                                 child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     RichText(
                                         text: TextSpan(children: [
                                       TextSpan(
-                                          text: context
-                                              .read<DataProvider>()
-                                              .movies
-                                              .length
-                                              .toString(),
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold)),
+                                          text: context.read<DataProvider>().movies.length.toString(),
+                                          style: const TextStyle(fontWeight: FontWeight.bold)),
                                       const TextSpan(text: " películas")
                                     ])),
                                     RichText(
                                         text: TextSpan(children: [
                                       TextSpan(
-                                          text: context
-                                              .read<DataProvider>()
-                                              .waitList
-                                              .length
-                                              .toString(),
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold)),
+                                          text: context.read<DataProvider>().waitList.length.toString(),
+                                          style: const TextStyle(fontWeight: FontWeight.bold)),
                                       const TextSpan(text: " en espera")
                                     ]))
                                   ],
                                 )),
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  FilledButton(
-                                      child: const Text("Cerrar sesión"),
-                                      onPressed: () async {
-                                        await context
-                                            .read<DataProvider>()
-                                            .signOut();
-                                        Navigator.pop(context);
-                                      })
-                                ])
+                            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                              FilledButton(
+                                  child: const Text("Cerrar sesión"),
+                                  onPressed: () async {
+                                    await context.read<DataProvider>().signOut();
+                                    Navigator.pop(context);
+                                  })
+                            ])
                           ]),
                     actions: [
                       Button(
@@ -450,145 +417,102 @@ class Dialogs {
             barrierDismissible: true,
             fullscreenDialog: true,
             barrierLabel: "label",
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) =>
-                    FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(
+                  opacity: animation,
+                  child: child,
+                ),
             pageBuilder: (c, _, __) => Container(
                 color: Colors.black.withOpacity(0.5),
                 child: ContentDialog(
-                  constraints:
-                      const BoxConstraints(minWidth: 450, maxWidth: 600),
-                  title: Column(
+                  constraints: const BoxConstraints(minWidth: 450, maxWidth: 600),
+                  title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Hero(tag: "${movie.id}-title", child: Text(movie.title)),
+                    Text(
+                      movie.originalTitle,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w100),
+                    )
+                  ]),
+                  content: Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                    Hero(
+                        tag: "${movie.id}-poster",
+                        child: movie.poster != null
+                            ? Image.network(
+                                movie.poster ?? "",
+                                errorBuilder: (c, obj, stake) => Image.asset("assets/poster.jpg"),
+                              )
+                            : Image.asset("assets/poster.jpg")),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Hero(
-                            tag: "${movie.id}-title", child: Text(movie.title)),
-                        Text(
-                          movie.originalTitle,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w100),
-                        )
-                      ]),
-                  content: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Hero(
-                            tag: "${movie.id}-poster",
-                            child: movie.poster != null
-                                ? Image.network(movie.poster ?? "")
-                                : Image.asset("assets/poster.jpg")),
-                        const SizedBox(
-                          width: 8,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                                width: 220,
-                                child: RichText(
-                                    text: TextSpan(children: [
+                        SizedBox(
+                            width: 220,
+                            child: RichText(
+                                text: TextSpan(children: [
+                              const TextSpan(
+                                  text: "Director(es): ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              TextSpan(text: movie.director, style: const TextStyle(fontSize: 16))
+                            ]))),
+                        RichText(
+                            text: TextSpan(children: [
+                          const TextSpan(text: "Lanzamiento: ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          TextSpan(text: movie.launchDate.toString(), style: const TextStyle(fontSize: 16)),
+                        ])),
+                        RichText(
+                            text: TextSpan(children: [
+                          const TextSpan(text: "Duración: ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          TextSpan(text: "${movie.duration} min", style: const TextStyle(fontSize: 16)),
+                        ])),
+                        Wrap(
+                            children: movie.genders
+                                .map((gender) => Padding(
+                                    padding: const EdgeInsets.only(right: 5, top: 5),
+                                    child: Chip(
+                                      text: Text(gender),
+                                    )))
+                                .toList()),
+                        const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Divider(
+                              size: 220,
+                            )),
+                        RichText(
+                            text: TextSpan(children: [
+                          const TextSpan(text: "Carpeta: \n", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          TextSpan(text: movie.folder, style: const TextStyle(fontSize: 16)),
+                        ])),
+                        RichText(
+                            text: TextSpan(children: [
+                          const TextSpan(text: "Formato: ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          TextSpan(text: movie.format, style: const TextStyle(fontSize: 16)),
+                        ])),
+                        SizedBox(
+                            width: 220,
+                            child: Row(
+                              // mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                    child: RichText(
+                                        text: TextSpan(children: [
                                   const TextSpan(
-                                      text: "Director(es): ",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16)),
-                                  TextSpan(
-                                      text: movie.director,
-                                      style: const TextStyle(fontSize: 16))
+                                      text: "Idioma: \n", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                  TextSpan(text: movie.language, style: const TextStyle(fontSize: 16)),
                                 ]))),
-                            RichText(
-                                text: TextSpan(children: [
-                              const TextSpan(
-                                  text: "Lanzamiento: ",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16)),
-                              TextSpan(
-                                  text: movie.launchDate.toString(),
-                                  style: const TextStyle(fontSize: 16)),
-                            ])),
-                            RichText(
-                                text: TextSpan(children: [
-                              const TextSpan(
-                                  text: "Duración: ",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16)),
-                              TextSpan(
-                                  text: "${movie.duration} min",
-                                  style: const TextStyle(fontSize: 16)),
-                            ])),
-                            Wrap(
-                                children: movie.genders
-                                    .map((gender) => Padding(
-                                        padding: const EdgeInsets.only(
-                                            right: 5, top: 5),
-                                        child: Chip(
-                                          text: Text(gender),
-                                        )))
-                                    .toList()),
-                            const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 8),
-                                child: Divider(
-                                  size: 220,
-                                )),
-                            RichText(
-                                text: TextSpan(children: [
-                              const TextSpan(
-                                  text: "Carpeta: \n",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16)),
-                              TextSpan(
-                                  text: movie.folder,
-                                  style: const TextStyle(fontSize: 16)),
-                            ])),
-                            RichText(
-                                text: TextSpan(children: [
-                              const TextSpan(
-                                  text: "Formato: ",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16)),
-                              TextSpan(
-                                  text: movie.format,
-                                  style: const TextStyle(fontSize: 16)),
-                            ])),
-                            SizedBox(
-                                width: 220,
-                                child: Row(
-                                  // mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                        child: RichText(
-                                            text: TextSpan(children: [
-                                      const TextSpan(
-                                          text: "Idioma: \n",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16)),
-                                      TextSpan(
-                                          text: movie.language,
-                                          style: const TextStyle(fontSize: 16)),
-                                    ]))),
-                                    Checkbox(
-                                      checked: movie.subtitles,
-                                      onChanged: (v) {},
-                                      content: const Text("Subtitulos"),
-                                    ),
-                                  ],
-                                ))
-                          ],
-                        )
-                      ]),
+                                Checkbox(
+                                  checked: movie.subtitles,
+                                  onChanged: (v) {},
+                                  content: const Text("Subtitulos"),
+                                ),
+                              ],
+                            ))
+                      ],
+                    )
+                  ]),
                   actions: [
                     Button(
                         child: const Text("Cerrar"),
@@ -609,8 +533,7 @@ class Dialogs {
           return StatefulBuilder(
               builder: (context, setState) => ContentDialog(
                     title: Text("Lista de espera (${movies.length})"),
-                    constraints:
-                        const BoxConstraints(maxWidth: 368, maxHeight: 600),
+                    constraints: const BoxConstraints(maxWidth: 368, maxHeight: 600),
                     content: movies.isEmpty
                         ? const Text("Sin peliculas en lista de espera")
                         : ListView.builder(
@@ -626,9 +549,7 @@ class Dialogs {
                                             setState(() {
                                               isLoadingId = id;
                                             });
-                                            await context
-                                                .read<DataProvider>()
-                                                .deleteWaitMovie(id);
+                                            await context.read<DataProvider>().deleteWaitMovie(id);
                                             setState(() {
                                               isLoadingId = "";
                                             });
@@ -642,8 +563,7 @@ class Dialogs {
                             var result = await showDialog<String?>(
                                 context: context,
                                 builder: (c) {
-                                  TextEditingController controller =
-                                      TextEditingController();
+                                  TextEditingController controller = TextEditingController();
                                   return ContentDialog(
                                     title: const Text("Agregar pelicula"),
                                     content: TextBox(
@@ -654,8 +574,7 @@ class Dialogs {
                                       FilledButton(
                                           child: const Text("Guardar"),
                                           onPressed: () {
-                                            Navigator.pop(
-                                                context, controller.text);
+                                            Navigator.pop(context, controller.text);
                                           }),
                                       Button(
                                           child: Text("Cancelar"),
@@ -666,9 +585,7 @@ class Dialogs {
                                   );
                                 });
                             if (result != null) {
-                              await context
-                                  .read<DataProvider>()
-                                  .saveMovieToWait(result);
+                              await context.read<DataProvider>().saveMovieToWait(result);
                               setState(() {});
                             }
                           }),
@@ -687,8 +604,7 @@ class Dialogs {
         context: context,
         builder: (c) => ContentDialog(
               title: Text("¿Quieres eliminar ${movie.title}?"),
-              content: Text(
-                  "Estás a punto de eliminar ${movie.title} del ${movie.launchDate}"),
+              content: Text("Estás a punto de eliminar ${movie.title} del ${movie.launchDate}"),
               actions: [
                 FilledButton(
                     child: Text("Eliminar"),
@@ -708,8 +624,7 @@ class Dialogs {
 
 Future<String?> searchPosterById(String id) async {
   String? poster_;
-  var response = await get(Uri.parse(
-      "http://www.omdbapi.com/?i=$id&apikey=${dotenv.env["POSTERKEY"] ?? ""}"));
+  var response = await get(Uri.parse("http://www.omdbapi.com/?i=$id&apikey=${dotenv.env["POSTERKEY"] ?? ""}"));
   print(response.body);
   if (response.statusCode == 200) {
     var body = jsonDecode(response.body);
