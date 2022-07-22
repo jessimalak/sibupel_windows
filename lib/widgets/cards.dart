@@ -27,10 +27,7 @@ class MovieCard extends StatelessWidget {
                       break;
                   }
                 },
-                menuItems: [
-                  cm.MenuItem(title: "Actualizar"),
-                  cm.MenuItem(title: "Eliminar")
-                ],
+                menuItems: [cm.MenuItem(title: "Actualizar"), cm.MenuItem(title: "Eliminar")],
                 child: Card(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -38,23 +35,20 @@ class MovieCard extends StatelessWidget {
                       Hero(
                           tag: "${movie.id}-poster",
                           child: movie.poster != null
-                              ? Image.network(
-                                  movie.poster ?? "",
-                                  errorBuilder: (c, obj, stake) =>
-                                      Image.asset("assets/poster.jpg"),
-                                  loadingBuilder: (c, child, progress) =>
-                                      progress == null
-                                          ? child
-                                          : const SizedBox(
-                                              width: 200,
-                                              height: 300,
-                                              child: Center(
-                                                  child: SizedBox(
-                                                      width: 80,
-                                                      height: 80,
-                                                      child: ProgressRing())),
-                                            ),
-                                )
+                              ? ConstrainedBox(
+                                  constraints: const BoxConstraints(maxHeight: 300),
+                                  child: Image.network(
+                                    movie.poster ?? "",
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (c, obj, stake) => Image.asset("assets/poster.jpg"),
+                                    loadingBuilder: (c, child, progress) => progress == null
+                                        ? child
+                                        : const SizedBox(
+                                            width: 200,
+                                            height: 300,
+                                            child: Center(child: SizedBox(width: 80, height: 80, child: ProgressRing())),
+                                          ),
+                                  ))
                               : Image.asset("assets/poster.jpg")),
                       Hero(
                           tag: "${movie.id}-title",
@@ -65,10 +59,7 @@ class MovieCard extends StatelessWidget {
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                           )),
-                      Text(movie.director,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis),
+                      Text(movie.director, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
                     ],
                   ),
                 ))),
