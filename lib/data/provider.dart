@@ -54,8 +54,14 @@ class DataProvider with ChangeNotifier {
         String hidedData = await hideData(email, password);
         await sharedPreferences.setString("token", hidedData);
       }
-      readyRef = Firestore.instance.collection(user_.id).document("pelis").collection("ready");
-      waitRef = Firestore.instance.collection(user_.id).document("pelis").collection("wait");
+      readyRef = Firestore.instance
+          .collection(user_.id)
+          .document("pelis")
+          .collection("ready");
+      waitRef = Firestore.instance
+          .collection(user_.id)
+          .document("pelis")
+          .collection("wait");
       isLoading = true;
       notifyListeners();
       getMovies();
@@ -80,20 +86,28 @@ class DataProvider with ChangeNotifier {
     getLocalMovies();
     var fullData = await readyRef!.get();
     for (Document movie in fullData) {
-      bool isDownloaded = totalMovies.indexWhere((element) => element.id == movie.id) > -1 ? true : false;
+      bool isDownloaded =
+          totalMovies.indexWhere((element) => element.id == movie.id) > -1
+              ? true
+              : false;
       if (!isDownloaded) {
         var movieData = movie.map;
-        await sharedPreferences.setString("ready_${movie.id}", jsonEncode(movieData));
+        await sharedPreferences.setString(
+            "ready_${movie.id}", jsonEncode(movieData));
         movies.add(Movie.fromJson(movieData, movie.id));
         totalMovies.add(Movie.fromJson(movieData, movie.id));
       }
     }
     var waitData = await waitRef!.get();
     for (Document movie in waitData) {
-      bool isDownloaded = waitList.indexWhere((element) => element.id == movie.id) > -1 ? true : false;
+      bool isDownloaded =
+          waitList.indexWhere((element) => element.id == movie.id) > -1
+              ? true
+              : false;
       if (!isDownloaded) {
         var movieData = movie.map;
-        await sharedPreferences.setString("wait_${movie.id}", movieData["title"]);
+        await sharedPreferences.setString(
+            "wait_${movie.id}", movieData["title"]);
         waitList.add(WaitMovie(movieData["title"], movie.id));
       }
     }
@@ -106,11 +120,13 @@ class DataProvider with ChangeNotifier {
       var encoded = sharedPreferences.getString(movieKey);
       if (encoded != null) {
         if (movieKey.contains("ready_")) {
-          Movie movie = Movie.fromJson(jsonDecode(encoded), movieKey.replaceFirst("ready_", ""));
+          Movie movie = Movie.fromJson(
+              jsonDecode(encoded), movieKey.replaceFirst("ready_", ""));
           totalMovies.add(movie);
           movies.add(movie);
         } else {
-          WaitMovie movie = WaitMovie(encoded, movieKey.replaceFirst("wait_", ""));
+          WaitMovie movie =
+              WaitMovie(encoded, movieKey.replaceFirst("wait_", ""));
           waitList.add(movie);
           waitList = waitList.toSet().toList();
         }
@@ -121,7 +137,8 @@ class DataProvider with ChangeNotifier {
   Future<bool> saveMovie(Movie movie) async {
     try {
       var newMovie = await readyRef!.add(movie.toJson());
-      await sharedPreferences.setString("ready_${newMovie.id}", jsonEncode(movie.toJson()));
+      await sharedPreferences.setString(
+          "ready_${newMovie.id}", jsonEncode(movie.toJson()));
       var movieToAdd = Movie.fromJson(movie.toJson(), newMovie.id);
       movies.add(movieToAdd);
       movies = movies.toSet().toList();
@@ -138,7 +155,8 @@ class DataProvider with ChangeNotifier {
   Future<bool> updateMovie(Movie movie) async {
     try {
       await readyRef!.document(movie.id).update(movie.toJson());
-      await sharedPreferences.setString("ready_${movie.id}", jsonEncode(movie.toJson()));
+      await sharedPreferences.setString(
+          "ready_${movie.id}", jsonEncode(movie.toJson()));
       int totalIndex = totalMovies.indexWhere((old) => old.id == movie.id);
       int dataIndex = movies.indexWhere((old) => old.id == movie.id);
       totalMovies[totalIndex] = movie;
@@ -191,7 +209,10 @@ class DataProvider with ChangeNotifier {
   }
 
   Future<String> hideData(String m, String p) async {
-    String data = jsonEncode({"m": m.split("@").reversed.join("|"), "p": p.split("").reversed.join("")});
+    String data = jsonEncode({
+      "m": m.split("@").reversed.join("|"),
+      "p": p.split("").reversed.join("")
+    });
     var k = c.Key.fromUtf8("S1bup3lP4ssw0rd!Fr0mTh3D3vel()p3");
     var enc = c.Encrypter(c.AES(k));
     String r = enc.encrypt(data, iv: c.IV.fromLength(16)).base64;
@@ -203,12 +224,14 @@ class DataProvider with ChangeNotifier {
     if (d.isNotEmpty) {
       var k = c.Key.fromUtf8("S1bup3lP4ssw0rd!Fr0mTh3D3vel()p3");
       var enc = c.Encrypter(c.AES(k));
-      String r = enc.decrypt(c.Encrypted.fromBase64(d), iv: c.IV.fromLength(16));
+      String r =
+          enc.decrypt(c.Encrypted.fromBase64(d), iv: c.IV.fromLength(16));
       var data = jsonDecode(r);
       String m = data["m"] ?? "";
       String p = data["p"] ?? "";
       isAuth = true;
-      await login(m.split("|").reversed.join("@"), p.split("").reversed.join(""), false);
+      await login(m.split("|").reversed.join("@"),
+          p.split("").reversed.join(""), false);
     }
   }
 
@@ -220,11 +243,16 @@ class DataProvider with ChangeNotifier {
       return title.contains(value_);
     });
     var withOriginalTitle = totalMovies.where((movie) {
-      var title = movie.title.toLowerCase().replaceAll(RegExp(r'(-|\s|:)'), "");
+      var title =
+          movie.originalTitle.toLowerCase().replaceAll(RegExp(r'(-|\s|:)'), "");
       return title.toLowerCase().contains(value_);
     });
-    var byYear = totalMovies.where((movie) => movie.launchDate.toString() == value).toList();
-    var byDirector = totalMovies.where((movie) => movie.director.toLowerCase().contains(value)).toList();
+    var byYear = totalMovies
+        .where((movie) => movie.launchDate.toString() == value)
+        .toList();
+    var byDirector = totalMovies
+        .where((movie) => movie.director.toLowerCase().contains(value))
+        .toList();
     results.addAll(withTitle);
     results.addAll(withOriginalTitle);
     results.addAll(byYear);
