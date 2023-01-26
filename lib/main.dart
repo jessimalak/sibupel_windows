@@ -1,26 +1,27 @@
-import 'dart:io';
-
+import 'package:fast_cached_network_image/fast_cached_network_image.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:oktoast/oktoast.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sibupel/data/provider.dart';
 import 'package:sibupel/screens/movies.dart';
 import 'package:sibupel/widgets/dialogs.dart';
 import 'package:sibupel/widgets/window.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart' as acrylic;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
-  WindowOptions options = const WindowOptions(
-      minimumSize: Size(755, 550),
-      titleBarStyle: TitleBarStyle.hidden,
-      skipTaskbar: false);
+  await acrylic.Window.initialize();
+  WindowOptions options = const WindowOptions(minimumSize: Size(755, 550), titleBarStyle: TitleBarStyle.hidden, skipTaskbar: false);
   windowManager.waitUntilReadyToShow(options, () async {
     await windowManager.show();
   });
   await dotenv.load(fileName: ".env");
+  String storageLocation = (await getApplicationDocumentsDirectory()).path;
+  await FastCachedImageConfig.init(subDir: storageLocation, clearCacheAfter: const Duration(days: 15));
   runApp(const MyApp());
 }
 
@@ -75,16 +76,17 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationView(
+    return Listener(
+      onPointerDown: (event) {
+        ContextMenuController.removeAny();
+      },
+      child: NavigationView(
         appBar: NavigationAppBar(
             leading: Image.asset(
               "assets/app_icon.ico",
               height: 24,
             ),
-            title: const DragToMoveArea(
-                child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Text("Sibupel"))),
+            title: const DragToMoveArea(child: Align(alignment: AlignmentDirectional.centerStart, child: Text("Sibupel"))),
             actions: Row(
               children: [
                 const Spacer(),
@@ -95,32 +97,29 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                           barrierLabel: "label",
                           barrierDismissible: true,
                           context: context,
-                          pageBuilder:
-                              ((context, animation, secondaryAnimation) =>
-                                  ContentDialog(
-                                    title: const Text("Acerca de Sibupel"),
-                                    content: Row(children: [
-                                      Image.asset(
-                                        "assets/app_icon.ico",
-                                        height: 56,
+                          pageBuilder: ((context, animation, secondaryAnimation) => ContentDialog(
+                                title: const Text("Acerca de Sibupel"),
+                                content: Row(children: [
+                                  Image.asset(
+                                    "assets/app_icon.ico",
+                                    height: 56,
+                                  ),
+                                  const SizedBox(
+                                    width: 16,
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      Text(
+                                        "Versión 1.1.3",
+                                        style: TextStyle(fontSize: 18),
                                       ),
-                                      const SizedBox(
-                                        width: 16,
-                                      ),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: const [
-                                          Text(
-                                            "Versión 1.1.2",
-                                            style: TextStyle(fontSize: 18),
-                                          ),
-                                          Text("Developed by Malak;")
-                                        ],
-                                      )
-                                    ]),
-                                  )));
+                                      Text("Developed by Malak;")
+                                    ],
+                                  )
+                                ]),
+                              )));
                     }),
                 IconButton(
                     icon: const Icon(FluentIcons.note_pinned),
@@ -135,11 +134,10 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                 const WindowButtons()
               ],
             )),
-        content: NavigationBody(
-          index: index,
-          children: const [MoviesScreen()],
-        )
+        content: const MoviesScreen(),
+
         // This trailing comma makes auto-formatting nicer for build methods.
-        );
+      ),
+    );
   }
 }

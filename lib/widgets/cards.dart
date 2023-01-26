@@ -1,68 +1,96 @@
-import 'package:fluent_ui/fluent_ui.dart' hide MenuItem;
-import 'package:native_context_menu/native_context_menu.dart' as cm;
+import 'package:fast_cached_network_image/fast_cached_network_image.dart';
+import 'package:fluent_ui/fluent_ui.dart' hide Colors;
+import 'package:flutter/material.dart' hide Card;
 import 'package:shimmer/shimmer.dart';
 import 'package:sibupel/widgets/dialogs.dart';
 
 import '../data/movie.dart';
 
-class MovieCard extends StatelessWidget {
+class MovieCard extends StatefulWidget {
   final Movie movie;
 
   const MovieCard({super.key, required this.movie});
 
   @override
+  State<MovieCard> createState() => _MovieCardState();
+}
+
+class _MovieCardState extends State<MovieCard> {
+  final ContextMenuController _menuController = ContextMenuController();
+
+  @override
+  void dispose() {
+    _menuController.remove();
+    super.dispose();
+  }
+
+  void _show(Offset position) {
+    _menuController.show(
+      context: context,
+      contextMenuBuilder: (BuildContext buildContext) {
+        return AdaptiveTextSelectionToolbar.buttonItems(buttonItems: [
+          ContextMenuButtonItem(
+              onPressed: () {
+                ContextMenuController.removeAny();
+                Dialogs.showAddMovieDialog(context, movie: widget.movie);
+              },
+              label: 'Actualizar'),
+          ContextMenuButtonItem(
+              onPressed: () {
+                ContextMenuController.removeAny();
+                Dialogs.showDeleteMovieConfirmation(context, widget.movie);
+              },
+              label: 'Eliminar')
+        ], anchors: TextSelectionToolbarAnchors(primaryAnchor: position));
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) => Stack(children: [
         GestureDetector(
+            behavior: HitTestBehavior.opaque,
             onTap: () {
-              Dialogs.showMovieInfo(context, movie);
+              ContextMenuController.removeAny();
+              Dialogs.showMovieInfo(context, widget.movie);
             },
-            child: cm.ContextMenuRegion(
-                onItemSelected: (item) {
-                  switch (item.title) {
-                    case "Actualizar":
-                      Dialogs.showAddMovieDialog(context, movie: movie);
-                      break;
-                    case "Eliminar":
-                      Dialogs.showDeleteMovieConfirmation(context, movie);
-                      break;
-                  }
-                },
-                menuItems: [cm.MenuItem(title: "Actualizar"), cm.MenuItem(title: "Eliminar")],
-                child: Card(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Hero(
-                          tag: "${movie.id}-poster",
-                          child: movie.poster != null
-                              ? ConstrainedBox(
-                                  constraints: const BoxConstraints(maxHeight: 300),
-                                  child: Image.network(
-                                    movie.poster ?? "",
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (c, obj, stake) => Image.asset("assets/poster.jpg"),
-                                    loadingBuilder: (c, child, progress) => progress == null
-                                        ? child
-                                        : const SizedBox(
-                                            width: 200,
-                                            height: 300,
-                                            child: Center(child: SizedBox(width: 80, height: 80, child: ProgressRing())),
-                                          ),
-                                  ))
-                              : Image.asset("assets/poster.jpg")),
-                      Hero(
-                          tag: "${movie.id}-title",
-                          child: Text(
-                            movie.title,
-                            style: const TextStyle(fontSize: 24),
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          )),
-                      Text(movie.director, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
-                    ],
-                  ),
-                ))),
+            onSecondaryTapUp: (details) {
+              _show(details.globalPosition);
+            },
+            child: Card(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Hero(
+                      tag: "${widget.movie.id}-poster",
+                      child: widget.movie.poster != null
+                          ? ConstrainedBox(
+                              constraints: const BoxConstraints(maxHeight: 300),
+                              child: FastCachedImage(
+                                url: widget.movie.poster ?? "",
+                                key: ValueKey(widget.movie.poster ?? widget.movie.id),
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, obj, stake) => Image.asset("assets/poster.jpg"),
+                                loadingBuilder: (c, progress) => const SizedBox(
+                                  width: 200,
+                                  height: 500,
+                                  child: Center(child: SizedBox(width: 80, height: 80, child: ProgressRing())),
+                                ),
+                              ))
+                          : Image.asset("assets/poster.jpg")),
+                  Hero(
+                      tag: "${widget.movie.id}-title",
+                      child: Text(
+                        widget.movie.title,
+                        style: const TextStyle(fontSize: 24, height: 1.1),
+                        textAlign: TextAlign.center,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      )),
+                  Text(widget.movie.director, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            )),
         Positioned(
             top: 0,
             right: 0,
@@ -76,7 +104,7 @@ class MovieCard extends StatelessWidget {
                 child: Transform.rotate(
                   angle: 44.8,
                   child: Text(
-                    movie.launchDate.toString(),
+                    widget.movie.launchDate.toString(),
                     style: const TextStyle(fontSize: 16),
                   ),
                 ),
@@ -93,6 +121,8 @@ class ShimmerCard extends StatelessWidget {
       padding: const EdgeInsets.only(left: 16, bottom: 10),
       child: Card(
         child: Shimmer.fromColors(
+            baseColor: Colors.transparent,
+            highlightColor: Colors.white.withOpacity(0.1),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Container(
                 color: Colors.blue,
@@ -107,9 +137,7 @@ class ShimmerCard extends StatelessWidget {
                 height: 24,
                 width: 200,
               )
-            ]),
-            baseColor: Colors.transparent,
-            highlightColor: Colors.white.withOpacity(0.1)),
+            ])),
       ));
 }
 

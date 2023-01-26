@@ -55,6 +55,7 @@ class Dialogs {
                                 if (val!.trim().isEmpty) {
                                   return "¿y el titulo en español?";
                                 }
+                                return null;
                               },
                               controller: titleController,
                               placeholder: "Título",
@@ -64,6 +65,7 @@ class Dialogs {
                                 if (val!.trim().isEmpty) {
                                   return "¿Título original?";
                                 }
+                                return null;
                               },
                               controller: originalTitleController,
                               placeholder: "Título Original",
@@ -80,14 +82,11 @@ class Dialogs {
                             Row(
                               children: [
                                 Expanded(
-                                    child: Combobox<int>(
+                                    child: ComboBox<int>(
                                   value: year,
                                   placeholder: const Text("Estreno"),
-                                  items: context
-                                      .read<DataProvider>()
-                                      .years
-                                      .map((e) => ComboboxItem<int>(value: e, child: Text(e.toString())))
-                                      .toList(),
+                                  items:
+                                      context.read<DataProvider>().years.map((e) => ComboBoxItem<int>(value: e, child: Text(e.toString()))).toList(),
                                   onChanged: (val) {
                                     setState(() {
                                       year = val;
@@ -104,7 +103,7 @@ class Dialogs {
                                             genderController.text = "";
                                           });
                                         },
-                                        items: genders.map((e) => e["name"] ?? "").toList()))
+                                        items: genders.map((e) => AutoSuggestBoxItem(value: e["name"], label: e["name"] ?? "")).toList()))
                               ],
                             ),
                             Wrap(
@@ -132,6 +131,7 @@ class Dialogs {
                                 if (val!.trim().isEmpty) {
                                   return "¿En que carpeta está guardada?";
                                 }
+                                return null;
                               },
                               controller: folderController,
                               placeholder: "Carpeta",
@@ -144,7 +144,7 @@ class Dialogs {
                                         controller: formatController,
                                         clearButtonEnabled: false,
                                         placeholder: "Formato",
-                                        items: formats.map((e) => e).toList())),
+                                        items: formats.map((e) => AutoSuggestBoxItem(value: e, label: e)).toList())),
                                 const SizedBox(
                                   width: 8,
                                 ),
@@ -154,6 +154,7 @@ class Dialogs {
                                     if (val!.trim().isEmpty) {
                                       return "¿Cuanto dura?";
                                     }
+                                    return null;
                                   },
                                   controller: durationController,
                                   placeholder: "Duración",
@@ -168,6 +169,7 @@ class Dialogs {
                                     if (val!.trim().isEmpty) {
                                       return "¿En que idioma está?";
                                     }
+                                    return null;
                                   },
                                   controller: languageController,
                                   placeholder: "Idioma",
@@ -350,9 +352,8 @@ class Dialogs {
                                               setState_(() {
                                                 isLoading = true;
                                               });
-                                              var user_ = await context
-                                                  .read<DataProvider>()
-                                                  .login(mailController.text, passwordController.text, false);
+                                              var user_ =
+                                                  await context.read<DataProvider>().login(mailController.text, passwordController.text, false);
                                               setState_(() {
                                                 isLoading = false;
                                               });
@@ -399,7 +400,7 @@ class Dialogs {
                           ]),
                     actions: [
                       Button(
-                        child: Text("Cerrar"),
+                        child: const Text("Cerrar"),
                         onPressed: () {
                           Navigator.pop(context);
                         },
@@ -433,14 +434,18 @@ class Dialogs {
                     )
                   ]),
                   content: Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                    Hero(
-                        tag: "${movie.id}-poster",
-                        child: movie.poster != null
-                            ? Image.network(
-                                movie.poster ?? "",
-                                errorBuilder: (c, obj, stake) => Image.asset("assets/poster.jpg"),
-                              )
-                            : Image.asset("assets/poster.jpg")),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 225, maxWidth: 300),
+                      child: Hero(
+                          tag: "${movie.id}-poster",
+                          child: movie.poster != null
+                              ? Image.network(
+                                  movie.poster ?? "",
+                                  key: ValueKey(movie.id),
+                                  errorBuilder: (c, obj, stake) => Image.asset("assets/poster.jpg"),
+                                )
+                              : Image.asset("assets/poster.jpg")),
+                    ),
                     const SizedBox(
                       width: 8,
                     ),
@@ -453,8 +458,7 @@ class Dialogs {
                             width: 220,
                             child: RichText(
                                 text: TextSpan(children: [
-                              const TextSpan(
-                                  text: "Director(es): ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              const TextSpan(text: "Director(es): ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                               TextSpan(text: movie.director, style: const TextStyle(fontSize: 16))
                             ]))),
                         RichText(
@@ -499,8 +503,7 @@ class Dialogs {
                                 Expanded(
                                     child: RichText(
                                         text: TextSpan(children: [
-                                  const TextSpan(
-                                      text: "Idioma: \n", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                  const TextSpan(text: "Idioma: \n", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                                   TextSpan(text: movie.language, style: const TextStyle(fontSize: 16)),
                                 ]))),
                                 Checkbox(
@@ -580,7 +583,7 @@ class Dialogs {
                                             Navigator.pop(context, controller.text);
                                           }),
                                       Button(
-                                          child: Text("Cancelar"),
+                                          child: const Text("Cancelar"),
                                           onPressed: () {
                                             Navigator.pop(context);
                                           })
@@ -610,13 +613,13 @@ class Dialogs {
               content: Text("Estás a punto de eliminar ${movie.title} del ${movie.launchDate}"),
               actions: [
                 FilledButton(
-                    child: Text("Eliminar"),
+                    child: const Text("Eliminar"),
                     onPressed: () async {
                       await context.read<DataProvider>().deleteMovie(movie.id);
                       Navigator.pop(context);
                     }),
                 Button(
-                    child: Text("No"),
+                    child: const Text("No"),
                     onPressed: () {
                       Navigator.pop(context);
                     })
@@ -641,8 +644,8 @@ Future<String?> searchPosterById(String id) async {
 Future<String?> searchPosterByTitle(String title, int launchDate) async {
   String title_ = title.trim().replaceAll(" ", "+").toLowerCase();
   String? poster_;
-  var response = await get(Uri.parse(
-      "http://www.omdbapi.com/?i=${dotenv.env["POSTERi"] ?? ""}&apikey=${dotenv.env["POSTERKEY"] ?? ""}&t=$title_&y=$launchDate"));
+  var response = await get(
+      Uri.parse("http://www.omdbapi.com/?i=${dotenv.env["POSTERi"] ?? ""}&apikey=${dotenv.env["POSTERKEY"] ?? ""}&t=$title_&y=$launchDate"));
   print(response.body);
   if (response.statusCode == 200) {
     var body = jsonDecode(response.body);
