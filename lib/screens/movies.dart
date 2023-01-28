@@ -14,27 +14,17 @@ class MoviesScreen extends StatefulWidget {
 }
 
 class _MovieScreen extends State<MoviesScreen> {
-  Map<String, Map<String, dynamic>> searchOptions = {
-    "Titulo": {"field": SearchField.title, "icon": FluentIcons.text_field},
-    "Lanzamiento": {"field": SearchField.year, "icon": FluentIcons.calendar},
-    "Director": {"field": SearchField.director, "icon": FluentIcons.people}
-  };
-
-  Map<String, dynamic>? searchType;
-  TextEditingController searchController = TextEditingController();
   List<String> genders_ = [];
+  OrderBy _orderBy = OrderBy.random;
 
   @override
   void initState() {
     super.initState();
-    setState(() {
-      searchType = searchOptions["Titulo"];
-    });
   }
 
-  void search() {
-    context.read<DataProvider>().searchByData(searchController.text);
-  }
+  // void search() {
+  //   context.read<DataProvider>().searchByData(searchController.text);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -74,25 +64,20 @@ class _MovieScreen extends State<MoviesScreen> {
             TextSpan(text: "(${movies.length})")
           ]),
         ),
-        commandBar: Row(children: [
-          ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 250),
-              child: TextBox(
-                controller: searchController,
-                placeholder: "Buscar...",
-                prefix: const Icon(FluentIcons.search),
-                onEditingComplete: () {
-                  search();
-                },
-                suffix: searchController.text.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: const Icon(FluentIcons.clear),
-                        onPressed: () {
-                          searchController.text = "";
-                          context.read<DataProvider>().resetSearch();
-                        }),
-              )),
+        commandBar: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          const Text('Orden: '),
+          ComboBox(
+            value: _orderBy,
+            items: OrderBy.values.map((e) => ComboBoxItem(value: e, child: Text(e.label))).toList(),
+            onChanged: (OrderBy? value) {
+              _orderBy = value ?? OrderBy.random;
+
+              context.read<DataProvider>().orderMovies(_orderBy);
+            },
+          ),
+          const SizedBox(
+            width: 16,
+          ),
           IconButton(
             icon: const Icon(FluentIcons.add),
             onPressed: () {
@@ -129,9 +114,7 @@ class _MovieScreen extends State<MoviesScreen> {
                       child: Text("Sin peliculas"),
                     )
                   : ResponsiveGridList(
-                      horizontalGridMargin: 16,
-                      minItemWidth: 200,
-                      children: movies.map((movie) => MovieCard(movie: movie)).toList()),
+                      horizontalGridMargin: 16, minItemWidth: 200, children: movies.map((movie) => MovieCard(movie: movie)).toList()),
     );
   }
 }

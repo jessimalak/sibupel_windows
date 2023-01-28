@@ -244,13 +244,10 @@ class DataProvider with ChangeNotifier {
 
   void searchByGender(List<String> genders_) {
     List<Movie> result = [];
-    print(genders_);
     if (genders_.isNotEmpty) {
       for (String gender in genders_) {
-        print(gender);
         for (Movie movie in totalMovies) {
           var contains = movie.genders.contains(gender);
-          print(contains);
           if (contains) {
             result.add(movie);
           }
@@ -267,10 +264,42 @@ class DataProvider with ChangeNotifier {
     movies = totalMovies;
     notifyListeners();
   }
+
+  void orderMovies(OrderBy orderBy) {
+    switch (orderBy) {
+      case OrderBy.random:
+        movies.sort((a, b) => a.id.compareTo(b.id));
+        totalMovies.sort((a, b) => a.id.compareTo(b.id));
+        break;
+      case OrderBy.year:
+        movies.sort((a, b) => a.launchDate.compareTo(b.launchDate));
+        totalMovies.sort((a, b) => a.launchDate.compareTo(b.launchDate));
+        break;
+      case OrderBy.originalTitle:
+        movies.sort((a, b) => a.originalTitle.compareTo(b.originalTitle));
+        totalMovies.sort((a, b) => a.originalTitle.compareTo(b.originalTitle));
+        break;
+      case OrderBy.title:
+        movies.sort((a, b) => a.title.compareTo(b.title));
+        totalMovies.sort((a, b) => a.title.compareTo(b.title));
+        break;
+    }
+    notifyListeners();
+  }
 }
 
 class CompleteLocalData {
   List<Movie> ready;
   List<String> wait;
   CompleteLocalData(this.ready, this.wait);
+}
+
+enum OrderBy {
+  random('Aleatorio'),
+  year('Por año'),
+  originalTitle("Título original"),
+  title("Título en español");
+
+  const OrderBy(this.label);
+  final String label;
 }

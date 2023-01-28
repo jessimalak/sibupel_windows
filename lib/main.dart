@@ -53,6 +53,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with WindowListener {
   int index = 0;
+  TextEditingController searchController = TextEditingController();
 
   void setScreen(int newIndex) {
     setState(() {
@@ -90,6 +91,23 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
             actions: Row(
               children: [
                 const Spacer(),
+                ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 250, minWidth: 64),
+                    child: TextBox(
+                      controller: searchController,
+                      placeholder: "Buscar...",
+                      prefix: const Icon(FluentIcons.search),
+                      onEditingComplete: () {
+                        context.read<DataProvider>().searchByData(searchController.text);
+                      },
+                      suffix: IconButton(
+                          icon: const Icon(FluentIcons.clear),
+                          onPressed: () {
+                            searchController.text = "";
+                            context.read<DataProvider>().resetSearch();
+                          }),
+                    )),
+                const Spacer(),
                 IconButton(
                     icon: const Icon(FluentIcons.info),
                     onPressed: () {
@@ -112,7 +130,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                                     mainAxisSize: MainAxisSize.min,
                                     children: const [
                                       Text(
-                                        "Versión 1.1.3",
+                                        "Versión 1.2.1",
                                         style: TextStyle(fontSize: 18),
                                       ),
                                       Text("Developed by Malak;")
