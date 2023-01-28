@@ -58,8 +58,9 @@ class _MovieCardState extends State<MovieCard> {
               _show(details.globalPosition);
             },
             child: Card(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                // mainAxisSize: MainAxisSize.min,
                 children: [
                   Hero(
                       tag: "${widget.movie.id}-poster",
@@ -69,7 +70,8 @@ class _MovieCardState extends State<MovieCard> {
                               child: FastCachedImage(
                                 url: widget.movie.poster ?? "",
                                 key: ValueKey(widget.movie.poster ?? widget.movie.id),
-                                fit: BoxFit.cover,
+                                fit: BoxFit.contain,
+                                width: double.infinity,
                                 errorBuilder: (c, obj, stake) => Image.asset("assets/poster.jpg"),
                                 loadingBuilder: (c, progress) => const SizedBox(
                                   width: 200,
@@ -78,16 +80,26 @@ class _MovieCardState extends State<MovieCard> {
                                 ),
                               ))
                           : Image.asset("assets/poster.jpg")),
-                  Hero(
-                      tag: "${widget.movie.id}-title",
-                      child: Text(
-                        widget.movie.title,
-                        style: const TextStyle(fontSize: 24, height: 1.1),
-                        textAlign: TextAlign.center,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      )),
-                  Text(widget.movie.director, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          height: 4,
+                        ),
+                        Hero(
+                            tag: "${widget.movie.id}-title",
+                            child: Text(
+                              widget.movie.title,
+                              style: const TextStyle(fontSize: 24, height: 1.1),
+                              textAlign: TextAlign.center,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            )),
+                        Text(widget.movie.director, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             )),
@@ -104,7 +116,7 @@ class _MovieCardState extends State<MovieCard> {
                 child: Transform.rotate(
                   angle: 44.8,
                   child: Text(
-                    widget.movie.launchDate.toString(),
+                    '${widget.movie.launchDate}',
                     style: const TextStyle(fontSize: 16),
                   ),
                 ),
