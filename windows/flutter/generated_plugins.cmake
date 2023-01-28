@@ -3,7 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  native_context_menu
+  flutter_acrylic
   screen_retriever
   window_manager
 )
