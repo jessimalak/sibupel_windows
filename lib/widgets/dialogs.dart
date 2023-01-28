@@ -60,6 +60,9 @@ class Dialogs {
                               controller: titleController,
                               placeholder: "Título",
                             ),
+                            const SizedBox(
+                              height: 8,
+                            ),
                             TextFormBox(
                               validator: (val) {
                                 if (val!.trim().isEmpty) {
@@ -70,14 +73,21 @@ class Dialogs {
                               controller: originalTitleController,
                               placeholder: "Título Original",
                             ),
+                            const SizedBox(
+                              height: 8,
+                            ),
                             TextFormBox(
                               validator: (val) {
                                 if (val!.trim().isEmpty) {
                                   return "¿Quien la dirigió?";
                                 }
+                                return null;
                               },
                               controller: directorController,
                               placeholder: "Director(es)",
+                            ),
+                            const SizedBox(
+                              height: 8,
                             ),
                             Row(
                               children: [
@@ -93,14 +103,17 @@ class Dialogs {
                                     });
                                   },
                                 )),
+                                const SizedBox(
+                                  width: 8,
+                                ),
                                 Expanded(
                                     child: AutoSuggestBox(
                                         controller: genderController,
                                         placeholder: "Género",
                                         onSelected: (val) {
                                           setState(() {
-                                            genders_.add(val);
-                                            genderController.text = "";
+                                            genders_.add(val.value);
+                                            // genderController.text = "";
                                           });
                                         },
                                         items: genders.map((e) => AutoSuggestBoxItem(value: e["name"], label: e["name"] ?? "")).toList()))
@@ -136,6 +149,9 @@ class Dialogs {
                               controller: folderController,
                               placeholder: "Carpeta",
                             ),
+                            const SizedBox(
+                              height: 8,
+                            ),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
@@ -161,6 +177,9 @@ class Dialogs {
                                 ))
                               ],
                             ),
+                            const SizedBox(
+                              height: 8,
+                            ),
                             Row(
                               children: [
                                 Expanded(
@@ -183,6 +202,9 @@ class Dialogs {
                                       });
                                     })
                               ],
+                            ),
+                            const SizedBox(
+                              height: 8,
                             ),
                             Column(
                               children: [
