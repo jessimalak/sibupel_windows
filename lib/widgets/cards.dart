@@ -2,14 +2,15 @@ import 'package:fast_cached_network_image/fast_cached_network_image.dart';
 import 'package:fluent_ui/fluent_ui.dart' hide Colors;
 import 'package:flutter/material.dart' hide Card;
 import 'package:shimmer/shimmer.dart';
+import 'package:sibupel/screens/saga.dart';
 import 'package:sibupel/widgets/dialogs.dart';
 
 import '../data/movie.dart';
 
 class MovieCard extends StatefulWidget {
   final Movie movie;
-
-  const MovieCard({super.key, required this.movie});
+  final String extraTag;
+  const MovieCard({super.key, required this.movie, this.extraTag = ''});
 
   @override
   State<MovieCard> createState() => _MovieCardState();
@@ -32,6 +33,12 @@ class _MovieCardState extends State<MovieCard> {
           ContextMenuButtonItem(
               onPressed: () {
                 ContextMenuController.removeAny();
+                Dialogs.showSagasDialog(context, widget.movie);
+              },
+              label: 'Agregar a saga'),
+          ContextMenuButtonItem(
+              onPressed: () {
+                ContextMenuController.removeAny();
                 Dialogs.showAddMovieDialog(context, movie: widget.movie);
               },
               label: 'Actualizar'),
@@ -40,7 +47,7 @@ class _MovieCardState extends State<MovieCard> {
                 ContextMenuController.removeAny();
                 Dialogs.showDeleteMovieConfirmation(context, widget.movie);
               },
-              label: 'Eliminar')
+              label: 'Eliminar'),
         ], anchors: TextSelectionToolbarAnchors(primaryAnchor: position));
       },
     );
@@ -63,7 +70,7 @@ class _MovieCardState extends State<MovieCard> {
                 // mainAxisSize: MainAxisSize.min,
                 children: [
                   Hero(
-                      tag: "${widget.movie.id}-poster",
+                      tag: "${widget.movie.id}-poster${widget.extraTag}",
                       child: widget.movie.poster != null
                           ? ConstrainedBox(
                               constraints: const BoxConstraints(maxHeight: 300),
@@ -88,7 +95,7 @@ class _MovieCardState extends State<MovieCard> {
                           height: 4,
                         ),
                         Hero(
-                            tag: "${widget.movie.id}-title",
+                            tag: "${widget.movie.id}-title${widget.extraTag}",
                             child: Text(
                               widget.movie.title,
                               style: const TextStyle(fontSize: 24, height: 1.1),
@@ -167,4 +174,50 @@ class TriangleClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+class SagaCard extends StatelessWidget {
+  final Saga saga;
+  const SagaCard(this.saga, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, FluentPageRoute(builder: (c) => SagaPage(saga)));
+        // context.push('/saga', extra: saga);
+      },
+      child: Card(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+        child: Column(
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  for (int i = 0; i < saga.movies.length.clamp(0, 3); i++)
+                    Positioned(
+                        left: i * 45,
+                        top: i * 40,
+                        child: Hero(
+                          tag: '${saga.movies[i].id}-poster${saga.id}',
+                          child: Image.network(
+                            saga.movies[i].poster ?? '',
+                            width: 300,
+                            height: 300,
+                            fit: BoxFit.contain,
+                            alignment: Alignment.topLeft,
+                          ),
+                        ))
+                ],
+              ),
+            ),
+            Text(
+              saga.name,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

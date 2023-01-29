@@ -4,12 +4,14 @@ import 'package:firedart/auth/user_gateway.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart';
+import 'package:oktoast/oktoast.dart';
 import 'package:provider/provider.dart';
 import 'package:sibupel/data/movie.dart';
 import 'package:sibupel/data/provider.dart';
 
 class Dialogs {
   static showAddMovieDialog(BuildContext context, {Movie? movie}) async {
+    final Map<String, Saga> sagas = context.read<DataProvider>().sagas;
     await showDialog(
         barrierDismissible: true,
         context: context,
@@ -29,6 +31,7 @@ class Dialogs {
           bool hasSubtitles = movie?.subtitles ?? false;
           int? year = movie?.launchDate;
           String? poster = movie?.poster;
+          List<String> selectedSagas = [];
           if (movie != null) {
             titleController.text = movie.title;
             originalTitleController.text = movie.originalTitle;
@@ -95,8 +98,11 @@ class Dialogs {
                                     child: ComboBox<int>(
                                   value: year,
                                   placeholder: const Text("Estreno"),
-                                  items:
-                                      context.read<DataProvider>().years.map((e) => ComboBoxItem<int>(value: e, child: Text(e.toString()))).toList(),
+                                  items: context
+                                      .read<DataProvider>()
+                                      .years
+                                      .map((e) => ComboBoxItem<int>(value: e, child: Text(e.toString())))
+                                      .toList(),
                                   onChanged: (val) {
                                     setState(() {
                                       year = val;
@@ -116,7 +122,8 @@ class Dialogs {
                                             // genderController.text = "";
                                           });
                                         },
-                                        items: genders.map((e) => AutoSuggestBoxItem(value: e["name"], label: e["name"] ?? "")).toList()))
+                                        items:
+                                            genders.map((e) => AutoSuggestBoxItem(value: e["name"], label: e["name"] ?? "")).toList()))
                               ],
                             ),
                             Wrap(
@@ -139,16 +146,52 @@ class Dialogs {
                             const SizedBox(
                               height: 10,
                             ),
-                            TextFormBox(
-                              validator: (val) {
-                                if (val!.trim().isEmpty) {
-                                  return "¿En que carpeta está guardada?";
-                                }
-                                return null;
-                              },
-                              controller: folderController,
-                              placeholder: "Carpeta",
-                            ),
+                            Row(children: [
+                              SizedBox(
+                                width: 132,
+                                child: TextFormBox(
+                                  validator: (val) {
+                                    if (val!.trim().isEmpty) {
+                                      return "¿En que carpeta está guardada?";
+                                    }
+                                    return null;
+                                  },
+                                  controller: folderController,
+                                  placeholder: "Carpeta",
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 8,
+                              ),
+                              ComboBox(
+                                placeholder: const Text("Saga(s)"),
+                                onChanged: (String? value) {
+                                  if (value == null) return;
+                                  if (selectedSagas.contains(value)) {
+                                    setState(
+                                      () {
+                                        selectedSagas.remove(value);
+                                      },
+                                    );
+                                  } else {
+                                    setState(() {
+                                      selectedSagas.add(value);
+                                    });
+                                  }
+                                },
+                                items: sagas.values
+                                    .map((e) => ComboBoxItem(
+                                        value: e.id,
+                                        child: Row(
+                                          children: [
+                                            Visibility(
+                                                visible: selectedSagas.contains(e.id), child: const Icon(FluentIcons.check_mark)),
+                                            Text(e.name)
+                                          ],
+                                        )))
+                                    .toList(),
+                              )
+                            ]),
                             const SizedBox(
                               height: 8,
                             ),
@@ -317,6 +360,7 @@ class Dialogs {
                                   formatController.text,
                                   languageController.text,
                                   poster,
+                                  selectedSagas,
                                   movie?.id ?? "");
                               bool isSaved = movie != null
                                   ? await context.read<DataProvider>().updateMovie(movie_)
@@ -374,8 +418,9 @@ class Dialogs {
                                               setState_(() {
                                                 isLoading = true;
                                               });
-                                              var user_ =
-                                                  await context.read<DataProvider>().login(mailController.text, passwordController.text, false);
+                                              var user_ = await context
+                                                  .read<DataProvider>()
+                                                  .login(mailController.text, passwordController.text, false);
                                               setState_(() {
                                                 isLoading = false;
                                               });
@@ -627,6 +672,105 @@ class Dialogs {
         });
   }
 
+  static showSagasDialog(BuildContext context, Movie movie) {
+    showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (c) {
+          var sagas = context.watch<DataProvider>().sagas;
+          bool isLoading = false;
+          return StatefulBuilder(
+              builder: (context, setState) => ContentDialog(
+                    title: const Text("Sagas"),
+                    constraints: const BoxConstraints(maxWidth: 368, maxHeight: 600),
+                    content: sagas.isEmpty
+                        ? const Text("Sin sagas creadas")
+                        : ListView.builder(
+                            itemCount: sagas.length,
+                            itemBuilder: (c, i) {
+                              var id = sagas.keys.toList()[i];
+                              return ListTile(
+                                onPressed: () async {
+                                  setState(
+                                    () {
+                                      isLoading = true;
+                                    },
+                                  );
+                                  if (!movie.sagas.contains(id)) {
+                                    movie.sagas.add(id);
+                                    bool isSaved = await context.read<DataProvider>().updateMovie(movie);
+                                    context.read<DataProvider>().addMovieToSaga(id, movie);
+                                    if (isSaved) {
+                                      Navigator.pop(context);
+                                    } else {
+                                      setState(
+                                        () {
+                                          isLoading = false;
+                                        },
+                                      );
+                                      showToast("No se ha guardado");
+                                    }
+                                  } else {
+                                    setState(
+                                      () {
+                                        isLoading = false;
+                                      },
+                                    );
+                                    showToast("Ya está en la saga");
+                                  }
+                                },
+                                leading: movie.sagas.contains(id) ? const Icon(FluentIcons.check_mark) : null,
+                                title: Text(
+                                  sagas[id]?.name ?? '',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }),
+                    actions: [
+                      isLoading
+                          ? const ProgressBar()
+                          : FilledButton(
+                              child: const Text("Agregar"),
+                              onPressed: () async {
+                                var result = await showDialog<String?>(
+                                    context: context,
+                                    builder: (c) {
+                                      TextEditingController controller = TextEditingController();
+                                      return ContentDialog(
+                                        title: const Text("Agregar Saga"),
+                                        content: TextBox(
+                                          placeholder: "Nombre",
+                                          controller: controller,
+                                        ),
+                                        actions: [
+                                          FilledButton(
+                                              child: const Text("Guardar"),
+                                              onPressed: () {
+                                                Navigator.pop(context, controller.text);
+                                              }),
+                                          Button(
+                                              child: const Text("Cancelar"),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              })
+                                        ],
+                                      );
+                                    });
+                                if (result != null) {
+                                  await context.read<DataProvider>().createSaga(result, movie);
+                                  setState(() {});
+                                }
+                              }),
+                      Button(
+                          child: const Text("Cerrar"),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          })
+                    ],
+                  ));
+        });
+  }
+
   static showDeleteMovieConfirmation(BuildContext context, Movie movie) {
     showDialog(
         context: context,
@@ -666,8 +810,8 @@ Future<String?> searchPosterById(String id) async {
 Future<String?> searchPosterByTitle(String title, int launchDate) async {
   String title_ = title.trim().replaceAll(" ", "+").toLowerCase();
   String? poster_;
-  var response = await get(
-      Uri.parse("http://www.omdbapi.com/?i=${dotenv.env["POSTERi"] ?? ""}&apikey=${dotenv.env["POSTERKEY"] ?? ""}&t=$title_&y=$launchDate"));
+  var response = await get(Uri.parse(
+      "http://www.omdbapi.com/?i=${dotenv.env["POSTERi"] ?? ""}&apikey=${dotenv.env["POSTERKEY"] ?? ""}&t=$title_&y=$launchDate"));
   print(response.body);
   if (response.statusCode == 200) {
     var body = jsonDecode(response.body);

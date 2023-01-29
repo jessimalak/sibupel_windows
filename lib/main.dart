@@ -1,11 +1,12 @@
 import 'package:fast_cached_network_image/fast_cached_network_image.dart';
-import 'package:fluent_ui/fluent_ui.dart';
+import 'package:fluent_ui/fluent_ui.dart' hide FluentIcons;
+import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sibupel/data/provider.dart';
-import 'package:sibupel/screens/movies.dart';
+import 'package:sibupel/screens/home.dart';
 import 'package:sibupel/widgets/dialogs.dart';
 import 'package:sibupel/widgets/window.dart';
 import 'package:window_manager/window_manager.dart';
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
         title: 'Sibupel',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(brightness: Brightness.dark, accentColor: Colors.teal),
-        home: const MyHomePage(),
+        routes: {'/': (context) => const MyHomePage()},
       )),
     );
   }
@@ -54,6 +55,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with WindowListener {
   int index = 0;
   TextEditingController searchController = TextEditingController();
+  final viewKey = GlobalKey(debugLabel: 'Navigation View Key');
 
   void setScreen(int newIndex) {
     setState(() {
@@ -82,7 +84,9 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         ContextMenuController.removeAny();
       },
       child: NavigationView(
+        key: viewKey,
         appBar: NavigationAppBar(
+            backgroundColor: Colors.transparent,
             leading: Image.asset(
               "assets/app_icon.ico",
               height: 24,
@@ -96,12 +100,12 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                     child: TextBox(
                       controller: searchController,
                       placeholder: "Buscar...",
-                      prefix: const Icon(FluentIcons.search),
+                      prefix: const Icon(FluentIcons.search_20_regular),
                       onEditingComplete: () {
                         context.read<DataProvider>().searchByData(searchController.text);
                       },
                       suffix: IconButton(
-                          icon: const Icon(FluentIcons.clear),
+                          icon: const Icon(FluentIcons.dismiss_16_regular),
                           onPressed: () {
                             searchController.text = "";
                             context.read<DataProvider>().resetSearch();
@@ -109,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                     )),
                 const Spacer(),
                 IconButton(
-                    icon: const Icon(FluentIcons.info),
+                    icon: const Icon(FluentIcons.info_20_regular),
                     onPressed: () {
                       showGeneralDialog(
                           barrierLabel: "label",
@@ -130,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                                     mainAxisSize: MainAxisSize.min,
                                     children: const [
                                       Text(
-                                        "Versión 1.2.1",
+                                        "Versión 1.3.0",
                                         style: TextStyle(fontSize: 18),
                                       ),
                                       Text("Developed by Malak;")
@@ -140,19 +144,19 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                               )));
                     }),
                 IconButton(
-                    icon: const Icon(FluentIcons.note_pinned),
+                    icon: const Icon(FluentIcons.note_pin_20_regular),
                     onPressed: () {
                       Dialogs.showWaitList(context);
                     }),
                 IconButton(
-                    icon: const Icon(FluentIcons.settings),
+                    icon: const Icon(FluentIcons.settings_20_regular),
                     onPressed: () {
                       Dialogs.showSettingsDialog(context);
                     }),
                 const WindowButtons()
               ],
             )),
-        content: const MoviesScreen(),
+        content: const HomePage(),
 
         // This trailing comma makes auto-formatting nicer for build methods.
       ),

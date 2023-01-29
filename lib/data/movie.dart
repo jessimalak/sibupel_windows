@@ -11,20 +11,10 @@ class Movie {
   String language;
   String? poster;
   String id;
+  List<dynamic> sagas;
 
-  Movie(
-      this.title,
-      this.originalTitle,
-      this.director,
-      this.genders,
-      this.launchDate,
-      this.duration,
-      this.subtitles,
-      this.folder,
-      this.format,
-      this.language,
-      this.poster,
-      this.id);
+  Movie(this.title, this.originalTitle, this.director, this.genders, this.launchDate, this.duration, this.subtitles, this.folder,
+      this.format, this.language, this.poster, this.sagas, this.id);
 
   Movie.fromJson(Map<String, dynamic> data, String id_)
       : title = data["title"],
@@ -38,6 +28,7 @@ class Movie {
         format = data["format"],
         language = data["language"],
         poster = data["poster"],
+        sagas = data["sagas"] ?? [],
         id = id_;
 
   Map<String, dynamic> toJson() {
@@ -52,12 +43,13 @@ class Movie {
       "duration": duration,
       "format": format,
       "language": language,
-      "poster": poster
+      "poster": poster,
+      "sagas": sagas
     };
   }
 }
 
-class WaitMovie{
+class WaitMovie {
   String name;
   String id;
 
@@ -81,3 +73,15 @@ List<Map<String, String>> genders = [
 ];
 
 enum SearchField { title, director, year }
+
+class Saga {
+  String id;
+  String name;
+  List<Movie> movies;
+  String? cover;
+
+  Saga(this.id, this.name, this.movies, [this.cover]);
+  Saga.fromJson(Map data, this.id, this.movies)
+      : name = data['name'],
+        cover = data['cover'];
+}

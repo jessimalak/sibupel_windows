@@ -20,9 +20,11 @@ class DataProvider with ChangeNotifier {
   List<int> years = [];
   CollectionReference? readyRef;
   CollectionReference? waitRef;
+  CollectionReference? sagasRef;
   late SharedPreferences sharedPreferences;
   late StreamSubscription<bool> authState;
   late FirebaseAuth auth;
+  Map<String, Saga> sagas = {};
 
   void init() async {
     FirebaseAuth.initialize(dotenv.env["APIKEY"] ?? "", VolatileStore());
@@ -56,6 +58,7 @@ class DataProvider with ChangeNotifier {
       }
       readyRef = Firestore.instance.collection(user_.id).document("pelis").collection("ready");
       waitRef = Firestore.instance.collection(user_.id).document("pelis").collection("wait");
+      sagasRef = Firestore.instance.collection(user_.id).document("pelis").collection("sagas");
       isLoading = true;
       notifyListeners();
       getMovies();
@@ -86,6 +89,7 @@ class DataProvider with ChangeNotifier {
         fullData.addAll(last);
         if (!last.hasNextPage) break;
       }
+
       List<Movie> totalMovies = [];
       List<WaitMovie> waitList = [];
       for (Document movie in fullData) {
@@ -99,6 +103,10 @@ class DataProvider with ChangeNotifier {
         var movieData = movie.map;
         await sharedPreferences.setString("wait_${movie.id}", movieData["title"]);
         waitList.add(WaitMovie(movieData["title"], movie.id));
+      }
+      Page<Document> sagas = await sagasRef!.get();
+      for (Document saga in sagas) {
+        this.sagas[saga.id] = Saga.fromJson(saga.map, saga.id, totalMovies.where((movie) => movie.sagas.contains(saga.id)).toList());
       }
       this.totalMovies = totalMovies;
       movies = totalMovies;
@@ -136,6 +144,9 @@ class DataProvider with ChangeNotifier {
       movies = movies.toSet().toList();
       totalMovies.add(movieToAdd);
       totalMovies = totalMovies.toSet().toList();
+      for (String saga in movie.sagas) {
+        addMovieToSaga(saga, movie);
+      }
       notifyListeners();
       return true;
     } catch (e) {
@@ -285,6 +296,29 @@ class DataProvider with ChangeNotifier {
         break;
     }
     notifyListeners();
+  }
+
+  Future<void> createSaga(String name, Movie movie, [String? cover]) async {
+    try {
+      var saga = await sagasRef!.add({'name': name, 'cover': cover});
+      movie.sagas.add(saga.id);
+      sagas[saga.id] = Saga(saga.id, name, [movie]);
+      await readyRef!.document(movie.id).update(movie.toJson());
+      await sharedPreferences.setString("ready_${movie.id}", jsonEncode(movie.toJson()));
+      int totalIndex = totalMovies.indexWhere((old) => old.id == movie.id);
+      int dataIndex = movies.indexWhere((old) => old.id == movie.id);
+      totalMovies[totalIndex] = movie;
+      movies[dataIndex] = movie;
+      notifyListeners();
+    } catch (e) {
+      showToast(e.toString(), backgroundColor: Colors.red);
+      notifyListeners();
+    }
+  }
+
+  void addMovieToSaga(String id, Movie movie) {
+    if (sagas[id]?.movies.contains(movie) ?? false) return;
+    sagas[id]!.movies.add(movie);
   }
 }
 
