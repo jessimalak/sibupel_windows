@@ -27,6 +27,7 @@ dependencies:
   fast_cached_network_image: ^1.0.1
   path_provider: ^2.0.11
   flutter_acrylic: ^1.1.0+1
+  fluentui_system_icons: ^1.1.190
 
 dev_dependencies:
   flutter_test:
