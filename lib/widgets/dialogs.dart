@@ -485,13 +485,12 @@ class Dialogs {
             barrierDismissible: true,
             fullscreenDialog: true,
             barrierLabel: "label",
+            barrierColor: Colors.black.withOpacity(0.5),
             transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(
                   opacity: animation,
                   child: child,
                 ),
-            pageBuilder: (c, _, __) => Container(
-                color: Colors.black.withOpacity(0.5),
-                child: ContentDialog(
+            pageBuilder: (c, _, __) => ContentDialog(
                   constraints: const BoxConstraints(minWidth: 450, maxWidth: 600),
                   title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Hero(tag: "${movie.id}-title", child: Text(movie.title)),
@@ -590,7 +589,7 @@ class Dialogs {
                           Navigator.pop(context);
                         })
                   ],
-                ))));
+                )));
   }
 
   static showWaitList(BuildContext context) {
@@ -791,6 +790,31 @@ class Dialogs {
                     })
               ],
             ));
+  }
+}
+
+class LoadingDialog {
+  final GlobalKey _loadingKey = GlobalKey();
+  final BuildContext _context;
+  bool isShowing = false;
+
+  LoadingDialog(this._context);
+
+  void show(String message) {
+    if (isShowing) return;
+    isShowing = true;
+    showDialog(
+        context: _context,
+        builder: (context) => ContentDialog(
+              key: _loadingKey,
+              title: Text(message),
+              content: const ProgressBar(),
+            ));
+  }
+
+  void dismiss() {
+    if (!isShowing) return;
+    Navigator.pop(_loadingKey.currentContext ?? _context);
   }
 }
 
