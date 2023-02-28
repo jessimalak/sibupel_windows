@@ -1,6 +1,8 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:sibupel/data/movie.dart';
+import 'package:sibupel/data/provider.dart';
 import 'package:sibupel/widgets/cards.dart';
+import 'package:sibupel/widgets/selector.dart';
 import 'package:sibupel/widgets/window.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -14,18 +16,32 @@ class SagaPage extends StatefulWidget {
 
 class _SagaPageState extends State<SagaPage> {
   List<Movie> movies = [];
+  OrderBy _orderBy = OrderBy.random;
   final GlobalKey<AnimatedGridState> _listKey = GlobalKey();
 
   @override
   void initState() {
+    movies = widget.saga.movies;
     super.initState();
-    Future future = Future(() => null);
-    for (var i = 0; i < widget.saga.movies.length; i++) {
-      future = future.then((value) => Future.delayed(const Duration(milliseconds: 100), () {
-            movies.add(widget.saga.movies[i]);
-            _listKey.currentState!.insertItem(i);
-          }));
+  }
+
+  void orderBy() {
+    switch (_orderBy) {
+      case OrderBy.random:
+        movies.sort((a, b) => a.id.compareTo(b.id));
+        break;
+      case OrderBy.year:
+        movies.sort((a, b) => a.launchDate.compareTo(b.launchDate));
+        break;
+      case OrderBy.originalTitle:
+        movies.sort((a, b) => a.originalTitle.compareTo(b.originalTitle));
+        break;
+      case OrderBy.title:
+        movies.sort((a, b) => a.title.compareTo(b.title));
+        break;
     }
+    // _listKey.currentState!.setState(() {});
+    setState(() {});
   }
 
   @override
@@ -44,16 +60,29 @@ class _SagaPageState extends State<SagaPage> {
               TextSpan(text: "(${widget.saga.movies.length})")
             ]),
           ),
+          commandBar: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              OrderBySelector(
+                  value: _orderBy,
+                  onChanged: (value) {
+                    _orderBy = value;
+                    orderBy();
+                  })
+            ],
+          ),
         ),
-        content: AnimatedGrid(
+        content: GridView.builder(
             key: _listKey,
-            initialItemCount: 0,
-            itemBuilder: (c, i, a) => ScaleTransition(
-                  scale: a,
-                  child: MovieCard(
-                    movie: widget.saga.movies[i],
-                    extraTag: widget.saga.id,
-                  ),
+            itemCount: movies.length,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemBuilder: (
+              c,
+              i,
+            ) =>
+                MovieCard(
+                  movie: widget.saga.movies[i],
+                  extraTag: widget.saga.id,
                 ),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 mainAxisExtent: 432, maxCrossAxisExtent: 256, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 0.55)),
