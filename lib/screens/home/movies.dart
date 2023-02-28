@@ -5,6 +5,7 @@ import 'package:sibupel/data/movie.dart';
 import 'package:sibupel/data/provider.dart';
 import 'package:sibupel/widgets/cards.dart';
 import 'package:sibupel/widgets/dialogs.dart';
+import 'package:sibupel/widgets/selector.dart';
 
 class MoviesScreen extends StatefulWidget {
   const MoviesScreen({
@@ -69,16 +70,12 @@ class _MovieScreen extends State<MoviesScreen> with AutomaticKeepAliveClientMixi
             ]),
           ),
           commandBar: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-            const Text('Orden: '),
-            ComboBox(
-              value: _orderBy,
-              items: OrderBy.values.map((e) => ComboBoxItem(value: e, child: Text(e.label))).toList(),
-              onChanged: (OrderBy? value) {
-                _orderBy = value ?? OrderBy.random;
-
-                context.read<DataProvider>().orderMovies(_orderBy);
-              },
-            ),
+            OrderBySelector(
+                value: _orderBy,
+                onChanged: (value) {
+                  _orderBy = value;
+                  context.read<DataProvider>().orderMovies(_orderBy);
+                }),
             const SizedBox(
               width: 16,
             ),
