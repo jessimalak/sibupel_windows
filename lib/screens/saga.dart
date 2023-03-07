@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:sibupel/data/movie.dart';
 import 'package:sibupel/data/provider.dart';
+import 'package:sibupel/widgets/adaptive/scaffold.dart';
+import 'package:sibupel/widgets/adaptive/window.dart';
 import 'package:sibupel/widgets/cards.dart';
 import 'package:sibupel/widgets/selector.dart';
 import 'package:sibupel/widgets/window.dart';
@@ -46,47 +50,52 @@ class _SagaPageState extends State<SagaPage> {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationView(
-      appBar: NavigationAppBar(
-          title: const DragToMoveArea(child: Align(alignment: AlignmentDirectional.centerStart, child: Text("Sibupel"))),
-          actions: Row(
-            children: const [Spacer(), WindowButtons()],
-          )),
-      content: ScaffoldPage(
-        header: PageHeader(
-          title: RichText(
-            text: TextSpan(children: [
-              TextSpan(text: '${widget.saga.name} ', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w600)),
-              TextSpan(text: "(${widget.saga.movies.length})")
-            ]),
-          ),
-          commandBar: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OrderBySelector(
-                  value: _orderBy,
-                  onChanged: (value) {
-                    _orderBy = value;
-                    orderBy();
-                  })
-            ],
-          ),
-        ),
+    return AdaptiveScaffold(
+        // macosButtonsSpace: true,
+        title: Platform.isMacOS
+            ? Text('${widget.saga.name} (${widget.saga.movies.length})')
+            : RichText(
+                text: TextSpan(children: [
+                  TextSpan(
+                      text: '${widget.saga.name} ',
+                      style: const TextStyle(
+                          fontSize: 32, fontWeight: FontWeight.w600)),
+                  TextSpan(text: "(${widget.saga.movies.length})")
+                ]),
+              ),
+        // header: PageHeader(
+
+        //   commandBar: Row(
+        //     mainAxisAlignment: MainAxisAlignment.end,
+        //     children: [
+        //       OrderBySelector(
+        //           value: _orderBy,
+        //           onChanged: (value) {
+        //             _orderBy = value;
+        //             orderBy();
+        //           })
+        //     ],
+        //   ),
+        // ),
         content: GridView.builder(
             key: _listKey,
             itemCount: movies.length,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: Platform.isMacOS
+                ? const EdgeInsets.all(16)
+                : const EdgeInsets.symmetric(horizontal: 8),
             itemBuilder: (
-              c,
-              i,
+              c,              i,
             ) =>
                 MovieCard(
                   movie: widget.saga.movies[i],
                   extraTag: widget.saga.id,
                 ),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                mainAxisExtent: 432, maxCrossAxisExtent: 256, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 0.55)),
-      ),
-    );
+                mainAxisExtent: 432,
+                maxCrossAxisExtent: 256,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 0.55)),
+      );
   }
 }

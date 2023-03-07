@@ -1,7 +1,7 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:sibupel/widgets/selector.dart';
 
-enum ToolBaItemType { button, dropdown, textField, pulldown }
+enum ToolBaItemType { button, dropdown, empty, pulldown }
 
 class AdaptiveToolBarItem<T> {
   ToolBaItemType type;

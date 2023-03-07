@@ -44,15 +44,42 @@ class AdaptiveProgressRing extends StatelessWidget {
 class AdaptiveChip extends StatelessWidget {
   final Widget child;
   final Widget? leading;
-  const AdaptiveChip({super.key, required this.child, this.leading});
+  final void Function()? onPressed;
+  final bool selected;
+  const AdaptiveChip(
+      {super.key,
+      required this.child,
+      this.leading,
+      this.onPressed,
+      this.selected = false});
 
   @override
   Widget build(BuildContext context) {
     if (Platform.isMacOS) {
-      return Container();
+      return GestureDetector(
+          onTap: onPressed,
+          child: Container(padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+            decoration: BoxDecoration(borderRadius: const BorderRadius.all(Radius.circular(10)),
+                color: selected ? MacosTheme.of(context).primaryColor : null),
+            child: Row(
+              children: [
+                leading ?? const SizedBox.shrink(),
+                child,
+              ],
+            ),
+          ));
+    }
+    if (selected) {
+      return Chip.selected(
+        text: child,
+        onPressed: onPressed,
+        image: leading,
+      );
     }
     return Chip(
+      image: leading,
       text: child,
+      onPressed: onPressed,
     );
   }
 }

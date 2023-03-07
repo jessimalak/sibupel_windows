@@ -20,3 +20,10 @@ class OrderBySelector extends StatelessWidget {
     ]);
   }
 }
+
+class AdaptiveDropdownItem<T>{
+  Widget title;
+  T value;
+
+  AdaptiveDropdownItem(this.title, this.value );
+}

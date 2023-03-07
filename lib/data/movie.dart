@@ -16,7 +16,7 @@ class Movie {
   Movie(this.title, this.originalTitle, this.director, this.genders, this.launchDate, this.duration, this.subtitles, this.folder,
       this.format, this.language, this.poster, this.sagas, this.id);
 
-  Movie.fromJson(Map<String, dynamic> data, String id_)
+  Movie.fromJson(Map data, String id_)
       : title = data["title"],
         originalTitle = data["originalTitle"],
         director = data["director"],

@@ -13,7 +13,8 @@ import 'package:window_manager/window_manager.dart';
 
 class AdaptiveWindow extends StatelessWidget {
   final Widget content;
-  final Widget? title, sidebar, leading;
+  final Widget? title, leading;
+  final Sidebar? endSidebar;
   final int currentIndex;
   final void Function(int index)? onIndexChange;
   final List<AdaptiveSideBarItem> sidebarItems;
@@ -23,18 +24,25 @@ class AdaptiveWindow extends StatelessWidget {
       required this.content,
       required,
       this.title,
-      this.sidebar,
       this.leading,
       this.currentIndex = 0,
       this.onIndexChange,
-      this.sidebarItems = const [], this.showTitleOnMac = true});
+      this.sidebarItems = const [],
+      this.showTitleOnMac = true,
+      this.endSidebar});
 
   @override
   Widget build(BuildContext context) {
     // ignore: sort_child_properties_last
-    if (Platform.isMacOS){
+    if (Platform.isMacOS) {
       return MacosWindow(
-        titleBar: title != null && showTitleOnMac ? TitleBar(title: title, height: 48,) : null,
+        titleBar: title != null && showTitleOnMac
+            ? TitleBar(
+                title: title,
+                height: 48,
+              )
+            : null,
+        endSidebar: endSidebar,
         sidebar: sidebarItems.isEmpty
             ? null
             : Sidebar(
@@ -49,7 +57,8 @@ class AdaptiveWindow extends StatelessWidget {
                 minWidth: 150,
               ),
         child: content,
-      );}
+      );
+    }
     return NavigationView(
       appBar: NavigationAppBar(
           title: Platform.isMacOS

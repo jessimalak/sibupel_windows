@@ -7,6 +7,7 @@ import 'package:sibupel/widgets/adaptive/toolbar_item.dart';
 
 class AdaptiveScaffold extends StatelessWidget {
   final Widget content, title;
+  final Widget? bottomBar;
   final List<AdaptiveToolBarItem> actions;
   final bool macosButtonsSpace;
   final bool centerTitle;
@@ -20,7 +21,7 @@ class AdaptiveScaffold extends StatelessWidget {
       this.macosButtonsSpace = false,
       this.centerTitle = false,
       this.wrapMacosNavigator = false,
-      this.navigationKey});
+      this.navigationKey, this.bottomBar});
 
   @override
   Widget build(BuildContext context) {
@@ -52,9 +53,8 @@ class AdaptiveScaffold extends StatelessWidget {
                                 },
                               ))
                           .toList());
-                case ToolBaItemType.textField:
-                  // TODO: Handle this case.
-                  break;
+                case ToolBaItemType.empty:
+                  return CustomToolbarItem(inToolbarBuilder: (context)=> const SizedBox.shrink());
                 case ToolBaItemType.dropdown:
                   return CustomToolbarItem(
                       inToolbarBuilder: (context) => MacosPopupButton(
@@ -67,11 +67,15 @@ class AdaptiveScaffold extends StatelessWidget {
                               .toList(),
                           onChanged: action.onChanged));
               }
-              return const ToolBarSpacer();
             }).toList(),
             title: title,
           ),
-          children: [ContentArea(builder: (c, controller) => content)]);
+          children: [ContentArea(builder: (c, controller) => Column(
+            children: [
+              Expanded(child: content),
+              bottomBar ?? SizedBox.shrink()
+            ],
+          ))]);
       return wrapMacosNavigator
           ? CupertinoTabView(
               navigatorKey: navigationKey,
@@ -81,6 +85,7 @@ class AdaptiveScaffold extends StatelessWidget {
     }
     return ScaffoldPage(
       content: content,
+      bottomBar: bottomBar,
       header: PageHeader(
         commandBar: Row(
             children: actions.map((action) {

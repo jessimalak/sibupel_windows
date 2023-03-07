@@ -1,8 +1,16 @@
+import 'dart:io';
+
 import 'package:fast_cached_network_image/fast_cached_network_image.dart';
 import 'package:fluent_ui/fluent_ui.dart' hide Colors;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide Card;
+import 'package:macos_ui/macos_ui.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:sibupel/data/provider.dart';
 import 'package:sibupel/screens/saga.dart';
+import 'package:sibupel/widgets/adaptive/card.dart';
+import 'package:sibupel/widgets/adaptive/window.dart';
 import 'package:sibupel/widgets/dialogs.dart';
 
 import '../data/movie.dart';
@@ -59,12 +67,19 @@ class _MovieCardState extends State<MovieCard> {
             behavior: HitTestBehavior.opaque,
             onTap: () {
               ContextMenuController.removeAny();
+              if (Platform.isMacOS) {
+                context.read<DataProvider>().selectedMovie = widget.movie;
+                if (!MacosWindowScope.of(context).isEndSidebarShown) {
+                  MacosWindowScope.of(context).toggleEndSidebar();
+                }
+                return;
+              }
               Dialogs.showMovieInfo(context, widget.movie);
             },
             onSecondaryTapUp: (details) {
               _show(details.globalPosition);
             },
-            child: Card(
+            child: AdaptiveCard(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
               child: Column(
                 // mainAxisSize: MainAxisSize.min,
@@ -76,14 +91,20 @@ class _MovieCardState extends State<MovieCard> {
                               constraints: const BoxConstraints(maxHeight: 300),
                               child: FastCachedImage(
                                 url: widget.movie.poster ?? "",
-                                key: ValueKey(widget.movie.poster ?? widget.movie.id),
+                                key: ValueKey(
+                                    widget.movie.poster ?? widget.movie.id),
                                 fit: BoxFit.contain,
                                 width: double.infinity,
-                                errorBuilder: (c, obj, stake) => Image.asset("assets/poster.jpg"),
+                                errorBuilder: (c, obj, stake) =>
+                                    Image.asset("assets/poster.jpg"),
                                 loadingBuilder: (c, progress) => const SizedBox(
                                   width: 200,
-                                  height: 500,
-                                  child: Center(child: SizedBox(width: 80, height: 80, child: ProgressRing())),
+                                  height: 300,
+                                  child: Center(
+                                      child: SizedBox(
+                                          width: 80,
+                                          height: 80,
+                                          child: AdaptiveProgressRing())),
                                 ),
                               ))
                           : Image.asset("assets/poster.jpg")),
@@ -103,7 +124,10 @@ class _MovieCardState extends State<MovieCard> {
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                             )),
-                        Text(widget.movie.director, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
+                        Text(widget.movie.director,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
@@ -138,7 +162,7 @@ class ShimmerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.only(left: 16, bottom: 10),
-      child: Card(
+      child: AdaptiveCard(
         child: Shimmer.fromColors(
             baseColor: Colors.transparent,
             highlightColor: Colors.white.withOpacity(0.1),
@@ -184,10 +208,18 @@ class SagaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(context, FluentPageRoute(builder: (c) => SagaPage(saga)));
+        Navigator.push(
+            context,
+            Platform.isWindows
+                ? FluentPageRoute(
+                    builder: (c) => AdaptiveWindow(
+                        title: const Text('Sibupel'), content: SagaPage(saga)))
+                : CupertinoPageRoute(
+                    builder: (context) => SagaPage(saga),
+                  ));
         // context.push('/saga', extra: saga);
       },
-      child: Card(
+      child: AdaptiveCard(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
         child: Column(
           children: [

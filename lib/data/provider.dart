@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:encrypt/encrypt.dart' as c;
 import 'package:firedart/auth/user_gateway.dart';
@@ -9,6 +10,8 @@ import 'package:oktoast/oktoast.dart';
 import 'package:sibupel/data/movie.dart';
 import 'package:firedart/firedart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart' as native_auth;
+import 'package:cloud_firestore/cloud_firestore.dart' as native_store;
 
 class DataProvider with ChangeNotifier {
   bool isAuth = false;
@@ -16,25 +19,76 @@ class DataProvider with ChangeNotifier {
   List<Movie> totalMovies = [];
   List<WaitMovie> waitList = [];
   bool isLoading = false;
-  User? user;
+  AdaptiveUser? user;
   List<int> years = [];
-  CollectionReference? readyRef;
-  CollectionReference? waitRef;
-  CollectionReference? sagasRef;
+  CollectionReference? windowsReadyRef;
+  native_store.CollectionReference? macReadyRef;
+  CollectionReference? windowsWaitRef;
+  native_store.CollectionReference? macWaitRef;
+  CollectionReference? windowsSagasRef;
+  native_store.CollectionReference? macSagasRef;
   late SharedPreferences sharedPreferences;
-  late StreamSubscription<bool> authState;
-  late FirebaseAuth auth;
+  late StreamSubscription authState;
+  late FirebaseAuth windowsAuth;
+  late native_auth.FirebaseAuth macAuth;
+
+  Movie? _selectedMovie;
+  Movie? get selectedMovie => _selectedMovie;
+  set selectedMovie(Movie? movie) {
+    _selectedMovie = movie;
+    notifyListeners();
+  }
+
   Map<String, Saga> sagas = {};
 
   void init() async {
-    FirebaseAuth.initialize(dotenv.env["APIKEY"] ?? "", VolatileStore());
-    Firestore.initialize(dotenv.env["PROJECTID"] ?? "");
-    auth = FirebaseAuth.instance;
     sharedPreferences = await SharedPreferences.getInstance();
-    authState = auth.signInState.listen((isSigned) async {
-      isAuth = isSigned;
-      notifyListeners();
-    });
+    if (Platform.isWindows) {
+      FirebaseAuth.initialize(dotenv.env["APIKEY"] ?? "", VolatileStore());
+      Firestore.initialize(dotenv.env["PROJECTID"] ?? "");
+      windowsAuth = FirebaseAuth.instance;
+      authState = windowsAuth.signInState.listen((isSigned) async {
+        isAuth = isSigned;
+        if (user != null && isSigned) {
+          windowsReadyRef = Firestore.instance
+              .collection(user?.id ?? '')
+              .document("pelis")
+              .collection("ready");
+          windowsWaitRef = Firestore.instance
+              .collection(user?.id ?? '')
+              .document("pelis")
+              .collection("wait");
+          windowsSagasRef = Firestore.instance
+              .collection(user?.id ?? '')
+              .document("pelis")
+              .collection("sagas");
+          getMovies();
+        }
+        notifyListeners();
+      });
+    } else {
+      macAuth = native_auth.FirebaseAuth.instance;
+      authState = macAuth.authStateChanges().listen((user) {
+        isAuth = user != null;
+        if (user != null) {
+          macReadyRef = native_store.FirebaseFirestore.instance
+              .collection(user.uid)
+              .doc('pelis')
+              .collection('ready');
+          macWaitRef = native_store.FirebaseFirestore.instance
+              .collection(user.uid)
+              .doc('pelis')
+              .collection('wait');
+          macSagasRef = native_store.FirebaseFirestore.instance
+              .collection(user.uid)
+              .doc('pelis')
+              .collection('sagas');
+          getMovies();
+          this.user = AdaptiveUser.mac(user);
+        }
+        notifyListeners();
+      });
+    }
     for (int i = 1920; i <= DateTime.now().year; i++) {
       years.add(i);
     }
@@ -46,22 +100,21 @@ class DataProvider with ChangeNotifier {
     authState.cancel();
   }
 
-  Future<User?> login(String email, String password, bool isSigned) async {
-    User? user_;
+  Future<AdaptiveUser?> login(
+      String email, String password, bool isSigned) async {
+    AdaptiveUser? user_;
     try {
-      user_ = await auth.signIn(email, password);
-      user = user_;
-      print(user_.toMap());
-      if (!isSigned) {
+      if (Platform.isWindows) {
+        var user = await windowsAuth.signIn(email, password);
+        user_ = AdaptiveUser.windows(user);
         String hidedData = await hideData(email, password);
         await sharedPreferences.setString("token", hidedData);
+      } else {
+        await macAuth.signInWithEmailAndPassword(
+            email: email, password: password);
       }
-      readyRef = Firestore.instance.collection(user_.id).document("pelis").collection("ready");
-      waitRef = Firestore.instance.collection(user_.id).document("pelis").collection("wait");
-      sagasRef = Firestore.instance.collection(user_.id).document("pelis").collection("sagas");
       isLoading = true;
       notifyListeners();
-      getMovies();
     } catch (e) {
       print(e);
       getLocalMovies();
@@ -72,7 +125,11 @@ class DataProvider with ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    auth.signOut();
+    if (Platform.isWindows) {
+      windowsAuth.signOut();
+    } else {
+      macAuth.signOut();
+    }
     movies.clear();
     waitList.clear();
     user = null;
@@ -82,31 +139,64 @@ class DataProvider with ChangeNotifier {
   void getMovies() async {
     getLocalMovies();
     try {
-      List<Document> fullData = [];
-      Page<Document>? last;
-      for (int i = 0; i < 10; i++) {
-        last = await readyRef!.get(pageSize: 300, nextPageToken: last?.nextPageToken ?? '');
-        fullData.addAll(last);
-        if (!last.hasNextPage) break;
-      }
-
       List<Movie> totalMovies = [];
       List<WaitMovie> waitList = [];
-      for (Document movie in fullData) {
-        var movieData = movie.map;
-        await sharedPreferences.setString("ready_${movie.id}", jsonEncode(movieData));
-        movies.add(Movie.fromJson(movieData, movie.id));
-        totalMovies.add(Movie.fromJson(movieData, movie.id));
+      if (Platform.isWindows) {
+        List<Document> fullData = [];
+        Page<Document>? last;
+        for (int i = 0; i < 10; i++) {
+          last = await windowsReadyRef!
+              .get(pageSize: 300, nextPageToken: last?.nextPageToken ?? '');
+          fullData.addAll(last);
+          if (!last.hasNextPage) break;
+        }
+        totalMovies = fullData.map((e) => Movie.fromJson(e.map, e.id)).toList();
+        var waitData = await windowsWaitRef!.get();
+        waitList = waitData
+            .map((element) => WaitMovie(element.map['title'], element.id))
+            .toList();
+        Page<Document> sagas = await windowsSagasRef!.get();
+        for (Document saga in sagas) {
+          this.sagas[saga.id] = Saga.fromJson(
+              saga.map,
+              saga.id,
+              totalMovies
+                  .where((movie) => movie.sagas.contains(saga.id))
+                  .toList());
+        }
+      } else {
+        native_store.QuerySnapshot<Object?>? ready = await macReadyRef?.get();
+        print(ready?.docs[0].data());
+        if (ready != null) {
+          totalMovies = ready.docs
+              .map((e) => Movie.fromJson(e.data() as Map, e.id))
+              .toList();
+        }
+        native_store.QuerySnapshot<Object?>? wait = await macWaitRef?.get();
+        if (wait != null) {
+          waitList = wait.docs
+              .map((e) => WaitMovie((e.data() as Map)['title'], e.id))
+              .toList();
+        }
+        native_store.QuerySnapshot<Object?>? sagas = await macSagasRef?.get();
+        if (sagas != null) {
+          for (var saga in sagas.docs) {
+            this.sagas[saga.id] = Saga.fromJson(
+                saga.data() as Map,
+                saga.id,
+                totalMovies
+                    .where((movie) => movie.sagas.contains(saga.id))
+                    .toList());
+          }
+        }
       }
-      var waitData = await waitRef!.get();
-      for (Document movie in waitData) {
-        var movieData = movie.map;
-        await sharedPreferences.setString("wait_${movie.id}", movieData["title"]);
-        waitList.add(WaitMovie(movieData["title"], movie.id));
+      for (Movie movie in totalMovies) {
+        await sharedPreferences.setString(
+            "ready_${movie.id}", jsonEncode(movie.toJson()));
       }
-      Page<Document> sagas = await sagasRef!.get();
-      for (Document saga in sagas) {
-        this.sagas[saga.id] = Saga.fromJson(saga.map, saga.id, totalMovies.where((movie) => movie.sagas.contains(saga.id)).toList());
+
+      for (WaitMovie movie in waitList) {
+        await sharedPreferences.setString("wait_${movie.id}", movie.name);
       }
       this.totalMovies = totalMovies;
       movies = totalMovies;
@@ -115,7 +205,6 @@ class DataProvider with ChangeNotifier {
       showToast('get movies: ${e.toString()}', backgroundColor: Colors.red);
     }
     isLoading = false;
-
     notifyListeners();
   }
 
@@ -124,11 +213,13 @@ class DataProvider with ChangeNotifier {
       var encoded = sharedPreferences.getString(movieKey);
       if (encoded == null) return;
       if (movieKey.contains("ready_")) {
-        Movie movie = Movie.fromJson(jsonDecode(encoded), movieKey.replaceFirst("ready_", ""));
+        Movie movie = Movie.fromJson(
+            jsonDecode(encoded), movieKey.replaceFirst("ready_", ""));
         totalMovies.add(movie);
         movies.add(movie);
       } else {
-        WaitMovie movie = WaitMovie(encoded, movieKey.replaceFirst("wait_", ""));
+        WaitMovie movie =
+            WaitMovie(encoded, movieKey.replaceFirst("wait_", ""));
         waitList.add(movie);
         waitList = waitList.toSet().toList();
       }
@@ -137,9 +228,17 @@ class DataProvider with ChangeNotifier {
 
   Future<bool> saveMovie(Movie movie) async {
     try {
-      var newMovie = await readyRef!.add(movie.toJson());
-      await sharedPreferences.setString("ready_${newMovie.id}", jsonEncode(movie.toJson()));
-      var movieToAdd = Movie.fromJson(movie.toJson(), newMovie.id);
+      String id = '';
+      if (Platform.isMacOS) {
+        var movieData = await macReadyRef!.add(movie.toJson());
+        id = movieData.id;
+      } else {
+        var movieData = await windowsReadyRef!.add(movie.toJson());
+        id = movieData.id;
+      }
+      await sharedPreferences.setString(
+          "ready_$id", jsonEncode(movie.toJson()));
+      var movieToAdd = Movie.fromJson(movie.toJson(), id);
       movies.add(movieToAdd);
       movies = movies.toSet().toList();
       totalMovies.add(movieToAdd);
@@ -157,8 +256,13 @@ class DataProvider with ChangeNotifier {
 
   Future<bool> updateMovie(Movie movie) async {
     try {
-      await readyRef!.document(movie.id).update(movie.toJson());
-      await sharedPreferences.setString("ready_${movie.id}", jsonEncode(movie.toJson()));
+      if (Platform.isMacOS) {
+        await macReadyRef?.doc(movie.id).update(movie.toJson());
+      } else {
+        await windowsReadyRef!.document(movie.id).update(movie.toJson());
+      }
+      await sharedPreferences.setString(
+          "ready_${movie.id}", jsonEncode(movie.toJson()));
       int totalIndex = totalMovies.indexWhere((old) => old.id == movie.id);
       int dataIndex = movies.indexWhere((old) => old.id == movie.id);
       totalMovies[totalIndex] = movie;
@@ -173,7 +277,11 @@ class DataProvider with ChangeNotifier {
 
   Future<void> deleteMovie(String id) async {
     try {
-      await readyRef!.document(id).delete();
+      if (Platform.isMacOS) {
+        await macReadyRef!.doc(id).delete();
+      } else {
+        await windowsReadyRef!.document(id).delete();
+      }
       await sharedPreferences.remove("ready_$id}");
       int totalIndex = totalMovies.indexWhere((old) => old.id == id);
       int dataIndex = movies.indexWhere((old) => old.id == id);
@@ -187,7 +295,7 @@ class DataProvider with ChangeNotifier {
 
   Future<bool> saveMovieToWait(String title) async {
     try {
-      var newMovie = await waitRef!.add({"title": title});
+      var newMovie = await windowsWaitRef!.add({"title": title});
       await sharedPreferences.setString("wait_${newMovie.id}", title);
       waitList.add(WaitMovie(title, newMovie.id));
       notifyListeners();
@@ -200,7 +308,7 @@ class DataProvider with ChangeNotifier {
 
   Future<void> deleteWaitMovie(String id) async {
     try {
-      await waitRef!.document(id).delete();
+      await windowsWaitRef!.document(id).delete();
       await sharedPreferences.remove("wait_$id");
       int index = waitList.indexWhere((element) => element.id == id);
       waitList.removeAt(index);
@@ -211,7 +319,10 @@ class DataProvider with ChangeNotifier {
   }
 
   Future<String> hideData(String m, String p) async {
-    String data = jsonEncode({"m": m.split("@").reversed.join("|"), "p": p.split("").reversed.join("")});
+    String data = jsonEncode({
+      "m": m.split("@").reversed.join("|"),
+      "p": p.split("").reversed.join("")
+    });
     var k = c.Key.fromUtf8("S1bup3lP4ssw0rd!Fr0mTh3D3vel()p3");
     var enc = c.Encrypter(c.AES(k));
     String r = enc.encrypt(data, iv: c.IV.fromLength(16)).base64;
@@ -223,12 +334,14 @@ class DataProvider with ChangeNotifier {
     if (d.isNotEmpty) {
       var k = c.Key.fromUtf8("S1bup3lP4ssw0rd!Fr0mTh3D3vel()p3");
       var enc = c.Encrypter(c.AES(k));
-      String r = enc.decrypt(c.Encrypted.fromBase64(d), iv: c.IV.fromLength(16));
+      String r =
+          enc.decrypt(c.Encrypted.fromBase64(d), iv: c.IV.fromLength(16));
       var data = jsonDecode(r);
       String m = data["m"] ?? "";
       String p = data["p"] ?? "";
       isAuth = true;
-      await login(m.split("|").reversed.join("@"), p.split("").reversed.join(""), false);
+      await login(m.split("|").reversed.join("@"),
+          p.split("").reversed.join(""), false);
     }
   }
 
@@ -240,11 +353,16 @@ class DataProvider with ChangeNotifier {
       return title.contains(value_);
     });
     var withOriginalTitle = totalMovies.where((movie) {
-      var title = movie.originalTitle.toLowerCase().replaceAll(RegExp(r'(-|\s|:)'), "");
+      var title =
+          movie.originalTitle.toLowerCase().replaceAll(RegExp(r'(-|\s|:)'), "");
       return title.toLowerCase().contains(value_);
     });
-    var byYear = totalMovies.where((movie) => movie.launchDate.toString() == value).toList();
-    var byDirector = totalMovies.where((movie) => movie.director.toLowerCase().contains(value)).toList();
+    var byYear = totalMovies
+        .where((movie) => movie.launchDate.toString() == value)
+        .toList();
+    var byDirector = totalMovies
+        .where((movie) => movie.director.toLowerCase().contains(value))
+        .toList();
     results.addAll(withTitle);
     results.addAll(withOriginalTitle);
     results.addAll(byYear);
@@ -295,16 +413,18 @@ class DataProvider with ChangeNotifier {
         totalMovies.sort((a, b) => a.title.compareTo(b.title));
         break;
     }
+    // moviesNavigatorKey = GlobalKey();
     notifyListeners();
   }
 
   Future<void> createSaga(String name, Movie movie, [String? cover]) async {
     try {
-      var saga = await sagasRef!.add({'name': name, 'cover': cover});
+      var saga = await windowsSagasRef!.add({'name': name, 'cover': cover});
       movie.sagas.add(saga.id);
       sagas[saga.id] = Saga(saga.id, name, [movie]);
-      await readyRef!.document(movie.id).update(movie.toJson());
-      await sharedPreferences.setString("ready_${movie.id}", jsonEncode(movie.toJson()));
+      await windowsReadyRef!.document(movie.id).update(movie.toJson());
+      await sharedPreferences.setString(
+          "ready_${movie.id}", jsonEncode(movie.toJson()));
       int totalIndex = totalMovies.indexWhere((old) => old.id == movie.id);
       int dataIndex = movies.indexWhere((old) => old.id == movie.id);
       totalMovies[totalIndex] = movie;
@@ -336,4 +456,19 @@ enum OrderBy {
 
   const OrderBy(this.label);
   final String label;
+}
+
+class AdaptiveUser {
+  final String id;
+  final String? displayName;
+  final String? email;
+
+  AdaptiveUser.windows(User user)
+      : id = user.id,
+        displayName = user.displayName,
+        email = user.email;
+  AdaptiveUser.mac(native_auth.User? user)
+      : id = user?.uid ?? '',
+        displayName = user?.displayName,
+        email = user?.email;
 }

@@ -1,6 +1,9 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:sibupel/data/provider.dart';
+import 'package:sibupel/widgets/adaptive/button.dart';
+import 'package:sibupel/widgets/adaptive/scaffold.dart';
+import 'package:sibupel/widgets/adaptive/textfield.dart';
 import 'package:sibupel/widgets/dialogs.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -33,19 +36,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<DataProvider>().user;
-    return ScaffoldPage(
-      header: const PageHeader(title: Text("Ajustes")),
+    return AdaptiveScaffold(
+      title: const Text("Ajustes"),
       content: user == null
           ? SizedBox(
               width: 300,
               height: 300,
-              child: Card(
+              child: Container(
                 child: Form(
                   key: formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      TextFormBox(
+                      AdaptiveTextFormField(
                         controller: mailController,
                         placeholder: "Correo electrónico",
                         validator: (value) {
@@ -56,7 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(
                         height: 8,
                       ),
-                      TextFormBox(
+                      AdaptiveTextFormField(
                           controller: passwordController,
                           placeholder: "Contraseña",
                           obscureText: true,
@@ -73,8 +76,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          FilledButton(
-                              child: const Text("Iniciar Sesión"),
+                          AdaptiveButton(
+                              label: "Iniciar Sesión",
                               onPressed: () async {
                                 login();
                               })
@@ -85,7 +88,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             )
-          : Card(
+          : Container(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 Text(user.email ?? ""),
                 Padding(
@@ -110,8 +113,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ],
                     )),
                 Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                  FilledButton(
-                      child: const Text("Cerrar sesión"),
+                  AdaptiveButton(
+                      label: "Cerrar sesión",
                       onPressed: () {
                         context.read<DataProvider>().signOut();
                       })
