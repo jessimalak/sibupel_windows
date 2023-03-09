@@ -84,30 +84,28 @@ class _MovieCardState extends State<MovieCard> {
               child: Column(
                 // mainAxisSize: MainAxisSize.min,
                 children: [
-                  Hero(
-                      tag: "${widget.movie.id}-poster${widget.extraTag}",
-                      child: widget.movie.poster != null
-                          ? ConstrainedBox(
-                              constraints: const BoxConstraints(maxHeight: 300),
-                              child: FastCachedImage(
-                                url: widget.movie.poster ?? "",
-                                key: ValueKey(
-                                    widget.movie.poster ?? widget.movie.id),
-                                fit: BoxFit.contain,
-                                width: double.infinity,
-                                errorBuilder: (c, obj, stake) =>
-                                    Image.asset("assets/poster.jpg"),
-                                loadingBuilder: (c, progress) => const SizedBox(
-                                  width: 200,
-                                  height: 300,
-                                  child: Center(
-                                      child: SizedBox(
-                                          width: 80,
-                                          height: 80,
-                                          child: AdaptiveProgressRing())),
-                                ),
-                              ))
-                          : Image.asset("assets/poster.jpg")),
+                  widget.movie.poster != null
+                      ? ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 300),
+                          child: FastCachedImage(
+                            url: widget.movie.poster ?? "",
+                            key: ValueKey(
+                                widget.movie.poster ?? widget.movie.id),
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            errorBuilder: (c, obj, stake) =>
+                                Image.asset("assets/poster.jpg"),
+                            loadingBuilder: (c, progress) => const SizedBox(
+                              width: 200,
+                              height: 300,
+                              child: Center(
+                                  child: SizedBox(
+                                      width: 80,
+                                      height: 80,
+                                      child: AdaptiveProgressRing())),
+                            ),
+                          ))
+                      : Image.asset("assets/poster.jpg"),
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
