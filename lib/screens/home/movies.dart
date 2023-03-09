@@ -63,6 +63,7 @@ class _MovieScreen extends State<MoviesScreen>
           },
         ),
         AdaptiveToolBarItem(
+          label: 'Agregar',
           type: ToolBaItemType.button,
           macIcon: CupertinoIcons.add,
           windowsIcon: FluentIcons.add,
@@ -76,6 +77,7 @@ class _MovieScreen extends State<MoviesScreen>
                     : ToolBaItemType.empty,
                 macIcon: CupertinoIcons.sidebar_right,
                 windowsIcon: CupertinoIcons.add,
+                label: 'Cerrar info',
                 onPressed: () {
                   setState(() {
                     MacosWindowScope.of(context).toggleEndSidebar();

@@ -1,9 +1,13 @@
 import 'dart:io';
 
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:macos_ui/macos_ui.dart';
+import 'package:provider/provider.dart';
 import 'package:sibupel/data/movie.dart';
 import 'package:sibupel/data/provider.dart';
 import 'package:sibupel/widgets/adaptive/scaffold.dart';
+import 'package:sibupel/widgets/adaptive/toolbar_item.dart';
 import 'package:sibupel/widgets/adaptive/window.dart';
 import 'package:sibupel/widgets/cards.dart';
 import 'package:sibupel/widgets/selector.dart';
@@ -50,52 +54,79 @@ class _SagaPageState extends State<SagaPage> {
 
   @override
   Widget build(BuildContext context) {
+    final selected = context.watch<DataProvider>().selectedMovie;
     return AdaptiveScaffold(
-        // macosButtonsSpace: true,
-        title: Platform.isMacOS
-            ? Text('${widget.saga.name} (${widget.saga.movies.length})')
-            : RichText(
-                text: TextSpan(children: [
-                  TextSpan(
-                      text: '${widget.saga.name} ',
-                      style: const TextStyle(
-                          fontSize: 32, fontWeight: FontWeight.w600)),
-                  TextSpan(text: "(${widget.saga.movies.length})")
-                ]),
-              ),
-        // header: PageHeader(
+      actions: [
+        AdaptiveToolBarItem(
+            type: ToolBaItemType.dropdown,
+            value: _orderBy,
+            onChanged: (value) {
+              _orderBy = value;
+              orderBy();
+            },
+            dropdownItems: OrderBy.values
+                .map((e) => AdaptiveDropdownItem(Text(e.label), e))
+                .toList()),
+        AdaptiveToolBarItem(
+          type: selected != null ? ToolBaItemType.button : ToolBaItemType.empty,
+          macIcon: CupertinoIcons.sidebar_right,
+          windowsIcon: CupertinoIcons.add,
+          label: 'Cerrar info',
+          onPressed: () {
+            setState(() {
+              MacosWindowScope.of(context).toggleEndSidebar();
+              Future.delayed(const Duration(milliseconds: 200), () {
+                context.read<DataProvider>().selectedMovie = null;
+              });
+            });
+          },
+        )
+      ],
+      title: Platform.isWindows
+          ? Text('${widget.saga.name} (${widget.saga.movies.length})')
+          : RichText(
+              text: TextSpan(children: [
+                TextSpan(
+                    text: '${widget.saga.name} ',
+                    style: const TextStyle(
+                        fontSize: 32, fontWeight: FontWeight.w600)),
+                TextSpan(text: "(${widget.saga.movies.length})")
+              ]),
+            ),
+      // header: PageHeader(
 
-        //   commandBar: Row(
-        //     mainAxisAlignment: MainAxisAlignment.end,
-        //     children: [
-        //       OrderBySelector(
-        //           value: _orderBy,
-        //           onChanged: (value) {
-        //             _orderBy = value;
-        //             orderBy();
-        //           })
-        //     ],
-        //   ),
-        // ),
-        content: GridView.builder(
-            key: _listKey,
-            itemCount: movies.length,
-            padding: Platform.isMacOS
-                ? const EdgeInsets.all(16)
-                : const EdgeInsets.symmetric(horizontal: 8),
-            itemBuilder: (
-              c,              i,
-            ) =>
-                MovieCard(
-                  movie: widget.saga.movies[i],
-                  extraTag: widget.saga.id,
-                ),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                mainAxisExtent: 432,
-                maxCrossAxisExtent: 256,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 0.55)),
-      );
+      //   commandBar: Row(
+      //     mainAxisAlignment: MainAxisAlignment.end,
+      //     children: [
+      //       OrderBySelector(
+      //           value: _orderBy,
+      //           onChanged: (value) {
+      //             _orderBy = value;
+      //             orderBy();
+      //           })
+      //     ],
+      //   ),
+      // ),
+      content: GridView.builder(
+          key: _listKey,
+          itemCount: movies.length,
+          padding: Platform.isMacOS
+              ? const EdgeInsets.all(16)
+              : const EdgeInsets.symmetric(horizontal: 8),
+          itemBuilder: (
+            c,
+            i,
+          ) =>
+              MovieCard(
+                movie: widget.saga.movies[i],
+                extraTag: widget.saga.id,
+              ),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              mainAxisExtent: 432,
+              maxCrossAxisExtent: 256,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+              childAspectRatio: 0.55)),
+    );
   }
 }
