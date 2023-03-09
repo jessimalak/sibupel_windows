@@ -229,11 +229,11 @@ class DataProvider with ChangeNotifier {
   Future<bool> saveMovie(Movie movie) async {
     try {
       String id = '';
-      if (Platform.isMacOS) {
-        var movieData = await macReadyRef!.add(movie.toJson());
+      if (Platform.isWindows) {
+        var movieData = await windowsReadyRef!.add(movie.toJson());
         id = movieData.id;
       } else {
-        var movieData = await windowsReadyRef!.add(movie.toJson());
+        var movieData = await macReadyRef!.add(movie.toJson());
         id = movieData.id;
       }
       await sharedPreferences.setString(
@@ -256,10 +256,10 @@ class DataProvider with ChangeNotifier {
 
   Future<bool> updateMovie(Movie movie) async {
     try {
-      if (Platform.isMacOS) {
-        await macReadyRef?.doc(movie.id).update(movie.toJson());
-      } else {
+      if (Platform.isWindows) {
         await windowsReadyRef!.document(movie.id).update(movie.toJson());
+      } else {
+        await macReadyRef?.doc(movie.id).update(movie.toJson());
       }
       await sharedPreferences.setString(
           "ready_${movie.id}", jsonEncode(movie.toJson()));
@@ -277,10 +277,10 @@ class DataProvider with ChangeNotifier {
 
   Future<void> deleteMovie(String id) async {
     try {
-      if (Platform.isMacOS) {
-        await macReadyRef!.doc(id).delete();
-      } else {
+      if (Platform.isWindows) {
         await windowsReadyRef!.document(id).delete();
+      } else {
+        await macReadyRef!.doc(id).delete();
       }
       await sharedPreferences.remove("ready_$id}");
       int totalIndex = totalMovies.indexWhere((old) => old.id == id);
@@ -419,17 +419,27 @@ class DataProvider with ChangeNotifier {
 
   Future<void> createSaga(String name, Movie movie, [String? cover]) async {
     try {
-      var saga = await windowsSagasRef!.add({'name': name, 'cover': cover});
-      movie.sagas.add(saga.id);
-      sagas[saga.id] = Saga(saga.id, name, [movie]);
-      await windowsReadyRef!.document(movie.id).update(movie.toJson());
-      await sharedPreferences.setString(
-          "ready_${movie.id}", jsonEncode(movie.toJson()));
-      int totalIndex = totalMovies.indexWhere((old) => old.id == movie.id);
-      int dataIndex = movies.indexWhere((old) => old.id == movie.id);
-      totalMovies[totalIndex] = movie;
-      movies[dataIndex] = movie;
-      notifyListeners();
+      String? id;
+      if (Platform.isWindows) {
+        var saga = await windowsSagasRef!.add({'name': name, 'cover': cover});
+        id = saga.id;
+        movie.sagas.add(id);
+        await windowsReadyRef!.document(movie.id).update(movie.toJson());
+      }else{
+        var saga = await macSagasRef!.add({'name': name, ' cover': cover});
+        id = saga.id;
+        await macReadyRef!.doc(movie.id).update({'sagas' : [native_store.FieldValue.arrayUnion([id])]});
+        movie.sagas.add(id);
+      }
+        sagas[id] = Saga(id, name, [movie]);
+        await sharedPreferences.setString(
+            "ready_${movie.id}", jsonEncode(movie.toJson()));
+        int totalIndex = totalMovies.indexWhere((old) => old.id == movie.id);
+        int dataIndex = movies.indexWhere((old) => old.id == movie.id);
+        totalMovies[totalIndex] = movie;
+        movies[dataIndex] = movie;
+        notifyListeners();
+      
     } catch (e) {
       showToast(e.toString(), backgroundColor: Colors.red);
       notifyListeners();
