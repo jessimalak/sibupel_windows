@@ -332,7 +332,8 @@ class Dialogs {
                               ? const SizedBox()
                               : Image.network(
                                   poster ?? "",
-                                  errorBuilder: (context, error, stackTrace) => Image.asset('assets/poster.jpg'),
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Image.asset('assets/poster.jpg'),
                                 )
                         ],
                       )
@@ -1012,46 +1013,98 @@ Future<String?> searchPosterByTitle(String title, int launchDate) async {
 }
 
 class SidebarMovieInfo extends StatelessWidget {
-  final ScrollController scrollController;
-  const SidebarMovieInfo(this.scrollController, {super.key});
+  const SidebarMovieInfo({super.key});
 
   @override
   Widget build(BuildContext context) {
     final movie = context.watch<DataProvider>().selectedMovie;
+    final typography = mac.MacosTheme.of(context).typography;
     return movie == null
         ? const SizedBox.shrink()
-        : SingleChildScrollView(
-            controller: scrollController,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  movie.title,
-                  style: mac.MacosTheme.of(context).typography.title1,
-                ),
-                Text(movie.originalTitle,
-                    style:
-                        mac.MacosTheme.of(context).typography.headline.copyWith(
-                              color: mac.MacosColors.systemGrayColor,
-                            )),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: FastCachedImage(
-                      url: movie.poster ?? '',
-                      key: ValueKey(movie.id),
-                      errorBuilder: (c, obj, stake) =>
-                          Image.asset("assets/poster.jpg"),
-                      loadingBuilder: (c, progress) => const SizedBox(
-                          width: 200,
-                          height: 300,
-                          child: Center(
-                              child: SizedBox(
-                                  width: 80,
-                                  height: 80,
-                                  child: AdaptiveProgressRing())))),
-                ),
-                Text(movie.director),
-                Text(movie.folder)
-              ],
-            ));
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                movie.title,
+                style: mac.MacosTheme.of(context).typography.title1,
+              ),
+              Text(movie.originalTitle,
+                  style:
+                      mac.MacosTheme.of(context).typography.headline.copyWith(
+                            color: mac.MacosColors.systemGrayColor,
+                          )),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: FastCachedImage(
+                    url: movie.poster ?? '',
+                    key: ValueKey(movie.id),
+                    errorBuilder: (c, obj, stake) =>
+                        Image.asset("assets/poster.jpg"),
+                    loadingBuilder: (c, progress) => const SizedBox(
+                        width: 200,
+                        height: 300,
+                        child: Center(
+                            child: SizedBox(
+                                width: 80,
+                                height: 80,
+                                child: AdaptiveProgressRing())))),
+              ),
+              
+              Text(
+                'Director(es)',
+                style: typography.title2,
+              ),
+              Text(movie.director, style: typography.headline),const SizedBox(height: 4,),
+              Text(
+                'Generos',
+                style: typography.title2,
+              ),
+              Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: movie.genders
+                    .map((e) => AdaptiveChip(child: Text(e)))
+                    .toList(),
+              ),
+              const AdaptiveDivider(),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Carpeta',
+                        style: typography.title2,
+                      ),
+                      Text(movie.folder, style: typography.headline),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Formato',
+                        style: typography.title2,
+                      ),
+                      Text(movie.format, style: typography.headline),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Duracion',
+                        style: typography.title2,
+                      ),
+                      Text("${movie.duration}'", style: typography.headline),
+                    ],
+                  ),
+                  AdaptiveCheckbox(isChecked: movie.subtitles, onChanged: (_){}, content: const Text('Subtitulos'))
+                ],
+              )
+            ],
+          );
   }
 }
