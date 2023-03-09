@@ -60,8 +60,8 @@ class AdaptiveChip extends StatelessWidget {
           onTap: onPressed,
           child: Container(padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
             decoration: BoxDecoration(borderRadius: const BorderRadius.all(Radius.circular(10)),
-                color: selected ? MacosTheme.of(context).primaryColor : null),
-            child: Row(
+                color: selected ? MacosTheme.of(context).primaryColor : MacosTheme.of(context).pulldownButtonTheme.backgroundColor?.withOpacity(0.05)),
+            child: Row(mainAxisSize: MainAxisSize.min,
               children: [
                 leading ?? const SizedBox.shrink(),
                 child,
