@@ -10,11 +10,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:sibupel/data/movie.dart';
 import 'package:sibupel/data/provider.dart';
 import 'package:sibupel/firebase_options.dart';
 import 'package:sibupel/screens/home/movies.dart';
 import 'package:sibupel/screens/home/sagas.dart';
 import 'package:sibupel/screens/home/settings.dart';
+import 'package:sibupel/screens/saga.dart';
 import 'package:sibupel/widgets/adaptive/window.dart';
 import 'package:sibupel/widgets/dialogs.dart';
 import 'package:window_manager/window_manager.dart';
@@ -59,7 +61,7 @@ class MyApp extends StatelessWidget {
                   debugShowCheckedModeBanner: false,
                   theme: MacosThemeData.light(),
                   darkTheme: MacosThemeData(
-                      brightness: Brightness.dark, primaryColor: Colors.teal),
+                      brightness: Brightness.dark, primaryColor: Colors.teal, popupButtonTheme: MacosPopupButtonThemeData(highlightColor: Colors.teal, backgroundColor: const Color.fromRGBO(255, 255, 255, 0.247), popupColor: MacosColors.controlColor)),
                   routes: {'/': (p0) => const MyHomePage()},
                   onGenerateRoute: (settings) {
                     if (settings.name == '/saga') {}
@@ -69,7 +71,7 @@ class MyApp extends StatelessWidget {
                   title: 'Sibupel',
                   debugShowCheckedModeBanner: false,
                   theme: ThemeData(
-                      brightness: Brightness.dark, accentColor: Colors.teal),
+                      brightness: Brightness.dark, accentColor: Colors.teal, navigationPaneTheme: NavigationPaneThemeData(backgroundColor: Colors.transparent)),
                   routes: {'/': (context) => const MyHomePage()},
                 )),
     );
@@ -110,12 +112,24 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
+    final sagas = context.watch<DataProvider>().sagas;
+    List<Widget> screens = [
+      const MoviesScreen(),
+      ...(sagas.isEmpty
+          ? const [SagasScreen()]
+          : Platform.isMacOS ? sagas.keys
+              .map<Widget>((e) => SagaPage(sagas[e] ?? Saga('id', 'name', [])))
+              .toList() : [const SagasScreen(), ...sagas.keys
+              .map<Widget>((e) => SagaPage(sagas[e] ?? Saga('id', 'name', [])))
+              .toList()]),
+      const SettingsScreen()
+    ];
     return Listener(
         onPointerDown: (event) {
           ContextMenuController.removeAny();
         },
         child: AdaptiveWindow(
-          key: viewKey,
+          navigationKey: viewKey,
           title: const Text("Sibupel"),
           showTitleOnMac: false,
           onIndexChange: (index) {
@@ -130,6 +144,13 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
             AdaptiveSideBarItem(
                 label: 'Sagas',
                 macosIcon: CupertinoIcons.collections,
+                items: sagas.keys
+                    .map((key) => AdaptiveSideBarItem(
+                        label: sagas[key]?.name ?? '',
+                        macosIcon:
+                            CupertinoIcons.rectangle_stack_person_crop_fill,
+                        windowsIcon: FluentIcons.access_time_20_filled))
+                    .toList(),
                 windowsIcon: FluentIcons.video_clip_multiple_20_regular),
             AdaptiveSideBarItem(
                 label: 'Ajustes',
@@ -138,14 +159,16 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
           ],
           content: IndexedStack(
             index: index,
-            children: const [MoviesScreen(), SagasScreen(), SettingsScreen()],
+            children: screens,
           ),
           endSidebar: Sidebar(
               shownByDefault: false,
-              padding: const EdgeInsets.all(16),
+              //
               topOffset: 0,
-              builder: (context, scrollController) =>
-                  SidebarMovieInfo(scrollController),
+              builder: (context, scrollController) => SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  controller: scrollController,
+                  child: const SidebarMovieInfo()),
               minWidth: 256),
         )
         // NavigationView(

@@ -7,7 +7,8 @@ import 'package:flutter/material.dart'
         NavigationRailThemeData,
         Theme,
         ThemeData,
-        NavigationRail;
+        NavigationRail,
+        NavigationRailDestination;
 import 'package:macos_ui/macos_ui.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -19,6 +20,7 @@ class AdaptiveWindow extends StatelessWidget {
   final void Function(int index)? onIndexChange;
   final List<AdaptiveSideBarItem> sidebarItems;
   final bool showTitleOnMac;
+  final GlobalKey? navigationKey;
   const AdaptiveWindow(
       {super.key,
       required this.content,
@@ -29,7 +31,8 @@ class AdaptiveWindow extends StatelessWidget {
       this.onIndexChange,
       this.sidebarItems = const [],
       this.showTitleOnMac = true,
-      this.endSidebar});
+      this.endSidebar,
+      this.navigationKey});
 
   @override
   Widget build(BuildContext context) {
@@ -50,16 +53,49 @@ class AdaptiveWindow extends StatelessWidget {
                     items: sidebarItems
                         .map((item) => SidebarItem(
                             label: Text(item.label),
-                            leading: MacosIcon(item.macosIcon)))
+                            leading: MacosIcon(item.macosIcon),
+                            disclosureItems: item.items.isEmpty
+                                ? null
+                                : item.items
+                                    .map((e) => SidebarItem(
+                                            label: Flexible(
+                                                child: Text(
+                                          e.label,
+                                          overflow: TextOverflow.ellipsis,
+                                        ))))
+                                    .toList()))
                         .toList(),
                     currentIndex: currentIndex,
                     onChanged: onIndexChange ?? (val) {}),
-                minWidth: 150,
+                minWidth: 200,
               ),
         child: content,
       );
     }
     return NavigationView(
+      key: key,
+      paneBodyBuilder: sidebarItems.isEmpty ? null : (_)=>content,
+      pane: sidebarItems.isEmpty
+          ? null
+          : NavigationPane(
+            selected: currentIndex,
+              items: sidebarItems
+                  .map<NavigationPaneItem>((e) => e.items.isEmpty
+                      ? PaneItem(
+                        title: Text(e.label),
+                          icon: Icon(e.windowsIcon),
+                          body: const SizedBox.shrink())
+                      : PaneItemExpander(
+                          body: const SizedBox.shrink(),
+                          icon: Icon(e.windowsIcon),
+                          title: Text(e.label),
+                          items: e.items
+                              .map((item) => PaneItem(title: Text(item.label),
+                                  icon: Icon(item.windowsIcon),
+                                  body: const SizedBox()))
+                              .toList()))
+                  .toList(),
+              onChanged: onIndexChange),
       appBar: NavigationAppBar(
           title: Platform.isMacOS
               ? title
@@ -67,27 +103,32 @@ class AdaptiveWindow extends StatelessWidget {
                   child: Align(
                       alignment: AlignmentDirectional.centerStart,
                       child: title))),
-      content: Row(
-        children: [
-          Theme(
-            data: ThemeData(
-                useMaterial3: true,
-                colorSchemeSeed: Colors.teal,
-                brightness: Brightness.dark,
-                navigationRailTheme: NavigationRailThemeData(
-                    backgroundColor: Colors.grey[170],
-                    minWidth: 64,
-                    labelType: NavigationRailLabelType.all,
-                    groupAlignment: 0)),
-            child: NavigationRail(
-              onDestinationSelected: onIndexChange,
-              destinations: const [],
-              selectedIndex: currentIndex,
-            ),
-          ),
-          Expanded(child: content)
-        ],
-      ),
+      content: sidebarItems.isEmpty
+          ? Row(
+              children: [
+                Theme(
+                  data: ThemeData(
+                      useMaterial3: true,
+                      colorSchemeSeed: Colors.teal,
+                      brightness: Brightness.dark,
+                      navigationRailTheme:const NavigationRailThemeData(
+                          backgroundColor: Colors.transparent,
+                          minWidth: 64,
+                          labelType: NavigationRailLabelType.all,
+                          groupAlignment: 0)),
+                  child: NavigationRail(
+                    onDestinationSelected: onIndexChange,
+                    destinations: sidebarItems
+                        .map((e) => NavigationRailDestination(
+                            icon: Icon(e.windowsIcon), label: Text(e.label)))
+                        .toList(),
+                    selectedIndex: currentIndex,
+                  ),
+                ),
+                Expanded(child: content)
+              ],
+            )
+          : null,
     );
   }
 }
@@ -95,9 +136,11 @@ class AdaptiveWindow extends StatelessWidget {
 class AdaptiveSideBarItem {
   String label;
   IconData windowsIcon, macosIcon;
+  List<AdaptiveSideBarItem> items;
 
   AdaptiveSideBarItem(
       {required this.label,
       required this.macosIcon,
-      required this.windowsIcon});
+      required this.windowsIcon,
+      this.items = const []});
 }
