@@ -61,7 +61,13 @@ class MyApp extends StatelessWidget {
                   debugShowCheckedModeBanner: false,
                   theme: MacosThemeData.light(),
                   darkTheme: MacosThemeData(
-                      brightness: Brightness.dark, primaryColor: Colors.teal, popupButtonTheme: MacosPopupButtonThemeData(highlightColor: Colors.teal, backgroundColor: const Color.fromRGBO(255, 255, 255, 0.247), popupColor: MacosColors.controlColor)),
+                      brightness: Brightness.dark,
+                      primaryColor: Colors.teal,
+                      popupButtonTheme: MacosPopupButtonThemeData(
+                          highlightColor: Colors.teal,
+                          backgroundColor:
+                              const Color.fromRGBO(255, 255, 255, 0.247),
+                          popupColor: MacosColors.controlColor)),
                   routes: {'/': (p0) => const MyHomePage()},
                   onGenerateRoute: (settings) {
                     if (settings.name == '/saga') {}
@@ -71,7 +77,10 @@ class MyApp extends StatelessWidget {
                   title: 'Sibupel',
                   debugShowCheckedModeBanner: false,
                   theme: ThemeData(
-                      brightness: Brightness.dark, accentColor: Colors.teal, navigationPaneTheme: NavigationPaneThemeData(backgroundColor: Colors.transparent)),
+                      brightness: Brightness.dark,
+                      accentColor: Colors.teal,
+                      navigationPaneTheme: const NavigationPaneThemeData(
+                          backgroundColor: Colors.transparent)),
                   routes: {'/': (context) => const MyHomePage()},
                 )),
     );
@@ -117,137 +126,61 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       const MoviesScreen(),
       ...(sagas.isEmpty
           ? const [SagasScreen()]
-          : Platform.isMacOS ? sagas.keys
-              .map<Widget>((e) => SagaPage(sagas[e] ?? Saga('id', 'name', [])))
-              .toList() : [const SagasScreen(), ...sagas.keys
-              .map<Widget>((e) => SagaPage(sagas[e] ?? Saga('id', 'name', [])))
-              .toList()]),
+          : Platform.isMacOS
+              ? sagas.keys
+                  .map<Widget>(
+                      (e) => SagaPage(sagas[e] ?? Saga('id', 'name', [])))
+                  .toList()
+              : [
+                  const SagasScreen(),
+                  ...sagas.keys
+                      .map<Widget>(
+                          (e) => SagaPage(sagas[e] ?? Saga('id', 'name', [])))
+                      .toList()
+                ]),
       const SettingsScreen()
     ];
-    return Listener(
-        onPointerDown: (event) {
-          ContextMenuController.removeAny();
-        },
-        child: AdaptiveWindow(
-          navigationKey: viewKey,
-          title: const Text("Sibupel"),
-          showTitleOnMac: false,
-          onIndexChange: (index) {
-            setScreen(index);
-          },
-          currentIndex: index,
-          sidebarItems: [
-            AdaptiveSideBarItem(
-                label: 'Pelis',
-                macosIcon: CupertinoIcons.film,
-                windowsIcon: FluentIcons.video_clip_20_regular),
-            AdaptiveSideBarItem(
-                label: 'Sagas',
-                macosIcon: CupertinoIcons.collections,
-                items: sagas.keys
-                    .map((key) => AdaptiveSideBarItem(
-                        label: sagas[key]?.name ?? '',
-                        macosIcon:
-                            CupertinoIcons.rectangle_stack_person_crop_fill,
-                        windowsIcon: FluentIcons.access_time_20_filled))
-                    .toList(),
-                windowsIcon: FluentIcons.video_clip_multiple_20_regular),
-            AdaptiveSideBarItem(
-                label: 'Ajustes',
-                macosIcon: CupertinoIcons.settings,
-                windowsIcon: FluentIcons.settings_20_regular)
-          ],
-          content: IndexedStack(
-            index: index,
-            children: screens,
-          ),
-          endSidebar: Sidebar(
-              shownByDefault: false,
-              //
-              topOffset: 0,
-              builder: (context, scrollController) => SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  controller: scrollController,
-                  child: const SidebarMovieInfo()),
-              minWidth: 256),
-        )
-        // NavigationView(
-        //   key: viewKey,
-        //   appBar: NavigationAppBar(
-        //       backgroundColor: Colors.transparent,
-        //       leading: Image.asset(
-        //         "assets/app_icon.ico",
-        //         height: 24,
-        //       ),
-        //       title: const DragToMoveArea(child: Align(alignment: AlignmentDirectional.centerStart, child: Text("Sibupel"))),
-        //       actions: Row(
-        //         children: [
-        //           const Spacer(),
-        //           ConstrainedBox(
-        //               constraints: const BoxConstraints(maxWidth: 250, minWidth: 64),
-        //               child: TextBox(
-        //                 controller: searchController,
-        //                 placeholder: "Buscar...",
-        //                 prefix: const Icon(FluentIcons.search_20_regular),
-        //                 onEditingComplete: () {
-        //                   context.read<DataProvider>().searchByData(searchController.text);
-        //                 },
-        //                 suffix: IconButton(
-        //                     icon: const Icon(FluentIcons.dismiss_16_regular),
-        //                     onPressed: () {
-        //                       searchController.text = "";
-        //                       context.read<DataProvider>().resetSearch();
-        //                     }),
-        //               )),
-        //           const Spacer(),
-        //           IconButton(
-        //               icon: const Icon(FluentIcons.info_20_regular),
-        //               onPressed: () {
-        //                 showGeneralDialog(
-        //                     barrierLabel: "label",
-        //                     barrierDismissible: true,
-        //                     context: context,
-        //                     pageBuilder: ((context, animation, secondaryAnimation) => ContentDialog(
-        //                           title: const Text("Acerca de Sibupel"),
-        //                           content: Row(children: [
-        //                             Image.asset(
-        //                               "assets/app_icon.ico",
-        //                               height: 56,
-        //                             ),
-        //                             const SizedBox(
-        //                               width: 16,
-        //                             ),
-        //                             Column(
-        //                               crossAxisAlignment: CrossAxisAlignment.start,
-        //                               mainAxisSize: MainAxisSize.min,
-        //                               children: const [
-        //                                 Text(
-        //                                   "Versión 1.3.0",
-        //                                   style: TextStyle(fontSize: 18),
-        //                                 ),
-        //                                 Text("Developed by Malak;")
-        //                               ],
-        //                             )
-        //                           ]),
-        //                         )));
-        //               }),
-        //           IconButton(
-        //               icon: const Icon(FluentIcons.note_pin_20_regular),
-        //               onPressed: () {
-        //                 Dialogs.showWaitList(context);
-        //               }),
-        //           IconButton(
-        //               icon: const Icon(FluentIcons.settings_20_regular),
-        //               onPressed: () {
-        //                 Dialogs.showSettingsDialog(context);
-        //               }),
-        //           const WindowButtons()
-        //         ],
-        //       )),
-        //   content: const HomePage(),
-
-        //   // This trailing comma makes auto-formatting nicer for build methods.
-        // ),
-        );
+    return AdaptiveWindow(
+      navigationKey: viewKey,
+      title: const Text("Sibupel"),
+      showTitleOnMac: false,
+      onIndexChange: (index) {
+        setScreen(index);
+      },
+      currentIndex: index,
+      sidebarItems: [
+        AdaptiveSideBarItem(
+            label: 'Pelis',
+            macosIcon: CupertinoIcons.film,
+            windowsIcon: FluentIcons.video_clip_20_regular),
+        AdaptiveSideBarItem(
+            label: 'Sagas',
+            macosIcon: CupertinoIcons.collections,
+            items: sagas.keys
+                .map((key) => AdaptiveSideBarItem(
+                    label: sagas[key]?.name ?? '',
+                    macosIcon: CupertinoIcons.rectangle_stack_person_crop_fill,
+                    windowsIcon: FluentIcons.access_time_20_filled))
+                .toList(),
+            windowsIcon: FluentIcons.video_clip_multiple_20_regular),
+        AdaptiveSideBarItem(
+            label: 'Ajustes',
+            macosIcon: CupertinoIcons.settings,
+            windowsIcon: FluentIcons.settings_20_regular)
+      ],
+      content: IndexedStack(
+        index: index,
+        children: screens,
+      ),
+      endSidebar: Sidebar(
+          shownByDefault: false,
+          //
+          topOffset: 0,
+          builder: (context, scrollController) => SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              controller: scrollController,
+              child: const SidebarMovieInfo()),
+          minWidth: 256),
+    );
   }
 }

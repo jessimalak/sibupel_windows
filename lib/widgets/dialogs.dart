@@ -857,32 +857,7 @@ class Dialogs {
                           : FilledButton(
                               child: const Text("Agregar"),
                               onPressed: () async {
-                                var result = await showDialog<String?>(
-                                    context: context,
-                                    builder: (c) {
-                                      TextEditingController controller =
-                                          TextEditingController();
-                                      return ContentDialog(
-                                        title: const Text("Agregar Saga"),
-                                        content: TextBox(
-                                          placeholder: "Nombre",
-                                          controller: controller,
-                                        ),
-                                        actions: [
-                                          FilledButton(
-                                              child: const Text("Guardar"),
-                                              onPressed: () {
-                                                Navigator.pop(
-                                                    context, controller.text);
-                                              }),
-                                          Button(
-                                              child: const Text("Cancelar"),
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              })
-                                        ],
-                                      );
-                                    });
+                                var result = await showAddSagaDialog(context);
                                 if (result != null) {
                                   await context
                                       .read<DataProvider>()
@@ -948,6 +923,59 @@ class Dialogs {
                     })
               ],
             ));
+  }
+
+  static Future<String?> showAddSagaDialog(BuildContext context) async {
+    final TextEditingController controller = TextEditingController();
+    if (Platform.isMacOS) {
+      return await mac.showMacosAlertDialog(
+        barrierDismissible: true,
+          context: context,
+          builder: (context) => mac.MacosAlertDialog(
+            appIcon: const mac.MacosIcon(CupertinoIcons.collections_solid),
+                title: const Text('Agregar Saga'),
+                message: mac.MacosTextField(placeholder: 'Nombre',controller: controller,),
+                primaryButton: mac.PushButton(
+                    onPressed: () {
+                      if(controller.text.trim().isEmpty)return;
+                      Navigator.pop(context, controller.text);
+                    },
+                    buttonSize: mac.ButtonSize.large,
+                    child: const Text('Guardar'),
+                  ),
+                  secondaryButton: mac.PushButton(
+                    isSecondary: true,
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    buttonSize: mac.ButtonSize.large,
+                    child: const Text('Cancelar'),
+                  ),
+              ));
+    }
+    return await showDialog<String?>(
+        context: context,
+        builder: (c) {
+          return ContentDialog(
+            title: const Text("Agregar Saga"),
+            content: TextBox(
+              placeholder: "Nombre",
+              controller: controller,
+            ),
+            actions: [
+              FilledButton(
+                  child: const Text("Guardar"),
+                  onPressed: () {
+                    Navigator.pop(context, controller.text);
+                  }),
+              Button(
+                  child: const Text("Cancelar"),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  })
+            ],
+          );
+        });
   }
 }
 
@@ -1049,12 +1077,14 @@ class SidebarMovieInfo extends StatelessWidget {
                                 height: 80,
                                 child: AdaptiveProgressRing())))),
               ),
-              
               Text(
                 'Director(es)',
                 style: typography.title2,
               ),
-              Text(movie.director, style: typography.headline),const SizedBox(height: 4,),
+              Text(movie.director, style: typography.headline),
+              const SizedBox(
+                height: 4,
+              ),
               Text(
                 'Generos',
                 style: typography.title2,
@@ -1101,7 +1131,10 @@ class SidebarMovieInfo extends StatelessWidget {
                       Text("${movie.duration}'", style: typography.headline),
                     ],
                   ),
-                  AdaptiveCheckbox(isChecked: movie.subtitles, onChanged: (_){}, content: const Text('Subtitulos'))
+                  AdaptiveCheckbox(
+                      isChecked: movie.subtitles,
+                      onChanged: (_) {},
+                      content: const Text('Subtitulos'))
                 ],
               )
             ],
