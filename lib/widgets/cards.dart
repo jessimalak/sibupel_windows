@@ -44,21 +44,54 @@ class _MovieCardState extends State<MovieCard> {
       MenuItem.submenu(
           label: 'Agregar a saga',
           submenu: Menu(items: [
-            MenuItem(label: 'Crear saga', onClick: (menuItem) {
-              Dialogs.showAddSagaDialog(context);
-            },),
+            MenuItem(
+              label: 'Crear saga',
+              onClick: (menuItem) async {
+                var name = await Dialogs.showAddSagaDialog(context);
+                if (name == null) return;
+                var loading = LoadingDialog(context)
+                  ..show('Creando saga $name...');
+                await context
+                    .read<DataProvider>()
+                    .createSaga(name, widget.movie);
+                loading.dismiss();
+              },
+            ),
             MenuItem.separator(),
-            ...sagas.keys.map((id) => MenuItem.checkbox(label: sagas[id]?.name, checked: widget.movie.sagas.contains(id), onClick: (menuItem) {
-              
-            },))
+            ...sagas.keys.map((id) => MenuItem.checkbox(
+                  label: sagas[id]?.name,
+                  checked: widget.movie.sagas.contains(id),
+                  onClick: (menuItem)async {
+                    var loading = LoadingDialog(context)..show('Agregando ${widget.movie.title} a ${sagas[id]?.name}');
+                    var isSaved = await context.read<DataProvider>().addMovieToSaga(id, widget.movie);
+                    switch(isSaved){
+                      case true:
+                      Dialogs.showSuccesToast('Guardado');
+                      break;
+                      case false:
+                      Dialogs.showErrorToast('No se pudo guardar');
+                      break;
+                      default:
+                      Dialogs.showErrorToast('La peli ya pertenece a la saga');
+                      break;
+                    }
+                    loading.dismiss();
+                  },
+                ))
           ])),
-            MenuItem(label: 'Actualizar', onClick: (menuItem) {
-              Dialogs.showAddMovieDialog(context, movie: widget.movie);
-            },),
-            MenuItem.separator(),
-            MenuItem(label: 'Eliminar', onClick: (menuItem) {
-              Dialogs.showDeleteMovieConfirmation(context, widget.movie);
-            },)
+      MenuItem(
+        label: 'Actualizar',
+        onClick: (menuItem) {
+          Dialogs.showAddMovieDialog(context, movie: widget.movie);
+        },
+      ),
+      MenuItem.separator(),
+      MenuItem(
+        label: 'Eliminar',
+        onClick: (menuItem) {
+          Dialogs.showDeleteMovieConfirmation(context, widget.movie);
+        },
+      )
     ]);
     popUpContextualMenu(_menu!);
   }
