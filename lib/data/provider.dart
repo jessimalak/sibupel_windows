@@ -18,7 +18,7 @@ class DataProvider with ChangeNotifier {
   List<Movie> movies = [];
   List<Movie> totalMovies = [];
   List<WaitMovie> waitList = [];
-  bool isLoading = false;
+  bool isLoading = true;
   AdaptiveUser? user;
   List<int> years = [];
   CollectionReference? windowsReadyRef;
@@ -263,8 +263,21 @@ class DataProvider with ChangeNotifier {
       }
       await sharedPreferences.setString(
           "ready_${movie.id}", jsonEncode(movie.toJson()));
+          
       int totalIndex = totalMovies.indexWhere((old) => old.id == movie.id);
       int dataIndex = movies.indexWhere((old) => old.id == movie.id);
+      List<dynamic> sagas = totalMovies[totalIndex].sagas;
+      for(String saga in sagas){
+        if(this.sagas[saga] != null){
+          int sagaIndex = this.sagas[saga]!.movies.indexWhere((element) => element.id == movie.id);
+          if(sagaIndex > -1){
+            this.sagas[saga]!.movies[sagaIndex] = movie;
+          }
+        }
+      }
+      if(selectedMovie?.id == movie.id){
+        selectedMovie = movie;
+      }
       totalMovies[totalIndex] = movie;
       movies[dataIndex] = movie;
       notifyListeners();
@@ -285,6 +298,12 @@ class DataProvider with ChangeNotifier {
       await sharedPreferences.remove("ready_$id}");
       int totalIndex = totalMovies.indexWhere((old) => old.id == id);
       int dataIndex = movies.indexWhere((old) => old.id == id);
+      List<dynamic> sagas = totalMovies[totalIndex].sagas;
+      for(String saga in sagas){
+        if(this.sagas[saga] != null){
+          this.sagas[saga]!.movies.removeWhere((element) => element.id == id);
+        }
+      }
       totalMovies.removeAt(totalIndex);
       movies.removeAt(dataIndex);
       notifyListeners();
@@ -425,30 +444,42 @@ class DataProvider with ChangeNotifier {
         id = saga.id;
         movie.sagas.add(id);
         await windowsReadyRef!.document(movie.id).update(movie.toJson());
-      }else{
+      } else {
         var saga = await macSagasRef!.add({'name': name, ' cover': cover});
         id = saga.id;
-        await macReadyRef!.doc(movie.id).update({'sagas' : [native_store.FieldValue.arrayUnion([id])]});
+        await macReadyRef!.doc(movie.id).update({
+          'sagas': native_store.FieldValue.arrayUnion([id])
+        });
         movie.sagas.add(id);
       }
-        sagas[id] = Saga(id, name, [movie]);
-        await sharedPreferences.setString(
-            "ready_${movie.id}", jsonEncode(movie.toJson()));
-        int totalIndex = totalMovies.indexWhere((old) => old.id == movie.id);
-        int dataIndex = movies.indexWhere((old) => old.id == movie.id);
-        totalMovies[totalIndex] = movie;
-        movies[dataIndex] = movie;
-        notifyListeners();
-      
+      sagas[id] = Saga(id, name, [movie]);
+      await sharedPreferences.setString(
+          "ready_${movie.id}", jsonEncode(movie.toJson()));
+      int totalIndex = totalMovies.indexWhere((old) => old.id == movie.id);
+      int dataIndex = movies.indexWhere((old) => old.id == movie.id);
+      totalMovies[totalIndex] = movie;
+      movies[dataIndex] = movie;
+      notifyListeners();
     } catch (e) {
       showToast(e.toString(), backgroundColor: Colors.red);
       notifyListeners();
     }
   }
 
-  void addMovieToSaga(String id, Movie movie) {
-    if (sagas[id]?.movies.contains(movie) ?? false) return;
-    sagas[id]!.movies.add(movie);
+  Future<bool?> addMovieToSaga(String id, Movie movie) async {
+    if (sagas[id]?.movies.contains(movie) ?? false) return null;
+    try {
+      movie.sagas.add(id);
+      if (Platform.isWindows) {
+        await windowsReadyRef!.document(movie.id).update(movie.toJson());
+      }else{
+        await macReadyRef!.doc(movie.id).update(movie.toJson());
+      }
+      sagas[id]!.movies.add(movie);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
 
