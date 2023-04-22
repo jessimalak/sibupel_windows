@@ -82,7 +82,7 @@ class _SagaPageState extends State<SagaPage> {
           },
         )
       ],
-      title: Platform.isWindows
+      title: Platform.isMacOS
           ? Text('${widget.saga.name} (${widget.saga.movies.length})')
           : RichText(
               text: TextSpan(children: [

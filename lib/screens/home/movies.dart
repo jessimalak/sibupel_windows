@@ -93,10 +93,10 @@ class _MovieScreen extends State<MoviesScreen>
           ? Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Text("Click en "),
-                  Icon(FluentIcons.settings),
-                  Text(" para iniciar sesión")
+                children: [
+                 const  Text("Click en "),
+                  Platform.isMacOS ? const  MacosIcon(CupertinoIcons.settings) :const  Icon(FluentIcons.settings),
+                  const Text(" para iniciar sesión")
                 ],
               ),
             )
