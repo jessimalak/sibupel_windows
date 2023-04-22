@@ -977,6 +977,14 @@ class Dialogs {
           );
         });
   }
+
+  static showSuccesToast(String message){
+    showToast(message, backgroundColor: Colors.teal);
+  }
+
+  static showErrorToast(String message){
+    showToast(message, backgroundColor: Colors.red);
+  }
 }
 
 class LoadingDialog {
@@ -991,9 +999,10 @@ class LoadingDialog {
     isShowing = true;
     if (Platform.isMacOS) {
       mac.showMacosSheet(
+        
           context: _context,
           builder: (context) =>
-              const mac.MacosSheet(child: mac.ProgressCircle()));
+               CupertinoAlertDialog(key: _loadingKey,content: const mac.ProgressCircle()));
     } else {
       showDialog(
           context: _context,
