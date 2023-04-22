@@ -141,13 +141,21 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       const SettingsScreen()
     ];
     return AdaptiveWindow(
-      navigationKey: viewKey,
+      key: viewKey,
       title: const Text("Sibupel"),
       showTitleOnMac: false,
       onIndexChange: (index) {
         setScreen(index);
       },
       currentIndex: index,
+      onSearch: (text) {
+        if ((text ?? '').isEmpty) {
+          context.read<DataProvider>().resetSearch();
+        } else {
+          if(index > 0) index = 0;
+          context.read<DataProvider>().searchByData(text ?? '');
+        }
+      },
       sidebarItems: [
         AdaptiveSideBarItem(
             label: 'Pelis',

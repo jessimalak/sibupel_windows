@@ -1,6 +1,7 @@
 import 'dart:io';
 
-import 'package:fluent_ui/fluent_ui.dart' hide ThemeData;
+import 'package:fluent_ui/fluent_ui.dart' hide ThemeData, OverlayVisibilityMode;
+import 'package:flutter/cupertino.dart' hide OverlayVisibilityMode;
 import 'package:flutter/material.dart'
     show
         NavigationRailLabelType,
@@ -20,7 +21,7 @@ class AdaptiveWindow extends StatelessWidget {
   final void Function(int index)? onIndexChange;
   final List<AdaptiveSideBarItem> sidebarItems;
   final bool showTitleOnMac;
-  final GlobalKey? navigationKey;
+  final void Function(String? text)? onSearch;
   const AdaptiveWindow(
       {super.key,
       required this.content,
@@ -32,13 +33,14 @@ class AdaptiveWindow extends StatelessWidget {
       this.sidebarItems = const [],
       this.showTitleOnMac = true,
       this.endSidebar,
-      this.navigationKey});
+      this.onSearch});
 
   @override
   Widget build(BuildContext context) {
     // ignore: sort_child_properties_last
     if (Platform.isMacOS) {
       return MacosWindow(
+
         titleBar: title != null && showTitleOnMac
             ? TitleBar(
                 title: title,
@@ -48,7 +50,12 @@ class AdaptiveWindow extends StatelessWidget {
         endSidebar: endSidebar,
         sidebar: sidebarItems.isEmpty
             ? null
-            : Sidebar(
+            : Sidebar(topOffset: 48,
+              top: onSearch != null ? MacosTextField(padding: const EdgeInsets.all(6.5), clearButtonMode: OverlayVisibilityMode.editing,placeholder: 'Buscar', onSubmitted: onSearch, onChanged: (value) {
+                if(value.isEmpty){
+                  onSearch!(value);
+                }
+              },prefix: const MacosIcon(CupertinoIcons.search),) : null,
                 builder: (context, scrollController) => SidebarItems(
                     items: sidebarItems
                         .map((item) => SidebarItem(
