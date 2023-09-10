@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   contextual_menu
+  firebase_core
   flutter_acrylic
   screen_retriever
   window_manager
