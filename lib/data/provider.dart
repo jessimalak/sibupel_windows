@@ -7,6 +7,7 @@ import 'package:firedart/auth/user_gateway.dart';
 import 'package:fluent_ui/fluent_ui.dart' hide Page;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:oktoast/oktoast.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sibupel/data/movie.dart';
 import 'package:firedart/firedart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +32,7 @@ class DataProvider with ChangeNotifier {
   late StreamSubscription authState;
   late FirebaseAuth windowsAuth;
   late native_auth.FirebaseAuth macAuth;
+  String version = '1.0.0';
 
   Movie? _selectedMovie;
   Movie? get selectedMovie => _selectedMovie;
@@ -43,6 +45,8 @@ class DataProvider with ChangeNotifier {
 
   void init() async {
     sharedPreferences = await SharedPreferences.getInstance();
+    PackageInfo info = await PackageInfo.fromPlatform();
+    version = info.version;
     if (Platform.isWindows) {
       FirebaseAuth.initialize(dotenv.env["APIKEY"] ?? "", VolatileStore());
       Firestore.initialize(dotenv.env["PROJECTID"] ?? "");
