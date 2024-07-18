@@ -71,12 +71,13 @@ class MyApp extends StatelessWidget {
                   routes: {'/': (p0) => const MyHomePage()},
                   onGenerateRoute: (settings) {
                     if (settings.name == '/saga') {}
+                    return null;
                   },
                 )
               : FluentApp(
                   title: 'Sibupel',
                   debugShowCheckedModeBanner: false,
-                  theme: ThemeData(
+                  theme: FluentThemeData(
                       brightness: Brightness.dark,
                       accentColor: Colors.teal,
                       navigationPaneTheme: const NavigationPaneThemeData(
