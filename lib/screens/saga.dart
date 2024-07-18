@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:macos_ui/macos_ui.dart';
 import 'package:provider/provider.dart';
@@ -8,11 +7,8 @@ import 'package:sibupel/data/movie.dart';
 import 'package:sibupel/data/provider.dart';
 import 'package:sibupel/widgets/adaptive/scaffold.dart';
 import 'package:sibupel/widgets/adaptive/toolbar_item.dart';
-import 'package:sibupel/widgets/adaptive/window.dart';
 import 'package:sibupel/widgets/cards.dart';
 import 'package:sibupel/widgets/selector.dart';
-import 'package:sibupel/widgets/window.dart';
-import 'package:window_manager/window_manager.dart';
 
 class SagaPage extends StatefulWidget {
   final Saga saga;

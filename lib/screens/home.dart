@@ -1,4 +1,4 @@
-import 'package:fluent_ui/fluent_ui.dart' hide FluentIcons, ThemeData, IconButton;
+import 'package:fluent_ui/fluent_ui.dart' hide FluentIcons, IconButton;
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart'
     show
@@ -9,8 +9,7 @@ import 'package:flutter/material.dart'
         Theme,
         ThemeData,
         NavigationRailThemeData,
-        NavigationRailLabelType,
-        IconButton;
+        NavigationRailLabelType;
 import 'package:sibupel/screens/home/movies.dart';
 import 'package:sibupel/screens/home/sagas.dart';
 import 'package:sibupel/screens/home/settings.dart';

@@ -1,14 +1,11 @@
 import 'dart:io';
 
 import 'package:contextual_menu/contextual_menu.dart';
-// import 'package:desktop_context_menu/desktop_context_menu.dart';
 import 'package:fast_cached_network_image/fast_cached_network_image.dart';
 import 'package:fluent_ui/fluent_ui.dart' hide Colors;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' hide Card;
 import 'package:macos_ui/macos_ui.dart';
-// import 'package:native_context_menu/native_context_menu.dart';
-import 'package:oktoast/oktoast.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:sibupel/data/provider.dart';
@@ -48,7 +45,7 @@ class _MovieCardState extends State<MovieCard> {
               label: 'Crear saga',
               onClick: (menuItem) async {
                 var name = await Dialogs.showAddSagaDialog(context);
-                if (name == null) return;
+                if (name == null || !mounted) return;
                 var loading = LoadingDialog(context)
                   ..show('Creando saga $name...');
                 await context
