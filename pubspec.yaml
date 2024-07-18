@@ -28,11 +28,12 @@ dependencies:
   path_provider: ^2.0.11
   flutter_acrylic: ^1.1.0+1
   fluentui_system_icons: ^1.1.190
-  macos_ui: ^1.12.1
-  firebase_core: ^2.7.0
-  firebase_auth: ^4.2.9
-  cloud_firestore: ^4.4.3
+  macos_ui: ^2.0.0
+  firebase_core: ^2.15.1
+  firebase_auth: ^4.9.0
+  cloud_firestore: ^4.9.1
   contextual_menu: ^0.1.2
+  package_info_plus: ^3.1.0
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +57,7 @@ flutter:
     - .env
     - assets/poster.jpg
     - assets/app_icon.ico
+    - assets/icon@0.5x.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
