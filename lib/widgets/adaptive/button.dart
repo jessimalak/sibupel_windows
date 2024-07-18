@@ -5,13 +5,13 @@ import 'package:macos_ui/macos_ui.dart';
 
 class AdaptiveButton extends StatelessWidget {
   final String label;
-  final ButtonSize buttonSize;
+  final ControlSize buttonSize;
   final void Function() onPressed;
   final List<Color> stateColors;
   const AdaptiveButton(
       {super.key,
       required this.label,
-      this.buttonSize = ButtonSize.large,
+      this.buttonSize = ControlSize.large,
       required this.onPressed,
       this.stateColors = const []});
 
@@ -19,7 +19,7 @@ class AdaptiveButton extends StatelessWidget {
   Widget build(BuildContext context) {
     if (Platform.isMacOS) {
       return PushButton(
-        buttonSize: buttonSize,
+        controlSize: buttonSize,
         onPressed: onPressed,
         color: stateColors.isNotEmpty ? stateColors[0] : null,
         child: Text(label),

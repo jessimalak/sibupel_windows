@@ -886,12 +886,12 @@ class Dialogs {
               await context.read<DataProvider>().deleteMovie(movie.id);
               Navigator.pop(context);
             },
-            buttonSize: mac.ButtonSize.large,
+            controlSize: mac.ControlSize.large,
             child: const Text("Eliminar"),
           ),
           secondaryButton: mac.PushButton(
-            buttonSize: mac.ButtonSize.large,
-            isSecondary: true,
+            controlSize: mac.ControlSize.large,
+            secondary: true,
             onPressed: () {
               Navigator.pop(context);
             },
@@ -940,15 +940,15 @@ class Dialogs {
                       if(controller.text.trim().isEmpty)return;
                       Navigator.pop(context, controller.text);
                     },
-                    buttonSize: mac.ButtonSize.large,
+                    controlSize: mac.ControlSize.large,
                     child: const Text('Guardar'),
                   ),
                   secondaryButton: mac.PushButton(
-                    isSecondary: true,
+                    secondary: true,
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    buttonSize: mac.ButtonSize.large,
+                    controlSize: mac.ControlSize.large,
                     child: const Text('Cancelar'),
                   ),
               ));

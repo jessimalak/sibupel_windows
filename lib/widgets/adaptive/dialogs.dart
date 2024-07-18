@@ -40,10 +40,10 @@ class AdaptiveDialog extends StatelessWidget {
                   visible: primaryButtonText != null,
                   child: PushButton(
                     onPressed: onPrimaryButtonPress,
-                    buttonSize: ButtonSize.large,
+                    controlSize: ControlSize.large,
                     child: Text(primaryButtonText ?? ''),
                   ),
-                ),Visibility(visible: secondaryButtonText != null,child: PushButton(isSecondary: true, onPressed: onSecondaryButtonPress, buttonSize: ButtonSize.large,child: Text(secondaryButtonText ?? ""),))
+                ),Visibility(visible: secondaryButtonText != null,child: PushButton(secondary: true, onPressed: onSecondaryButtonPress, controlSize: ControlSize.large,child: Text(secondaryButtonText ?? ""),))
               ],
             )
           ]),
