@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:fluent_ui/fluent_ui.dart' hide ThemeData, OverlayVisibilityMode;
+import 'package:fluent_ui/fluent_ui.dart' hide OverlayVisibilityMode;
 import 'package:flutter/cupertino.dart' hide OverlayVisibilityMode;
 import 'package:flutter/material.dart'
     show
@@ -40,7 +40,7 @@ class AdaptiveWindow extends StatelessWidget {
     // ignore: sort_child_properties_last
     if (Platform.isMacOS) {
       return MacosWindow(
-
+disableWallpaperTinting: true,
         titleBar: title != null && showTitleOnMac
             ? TitleBar(
                 title: title,
@@ -81,7 +81,7 @@ class AdaptiveWindow extends StatelessWidget {
     }
     return NavigationView(
       key: key,
-      paneBodyBuilder: sidebarItems.isEmpty ? null : (_)=>content,
+      paneBodyBuilder: sidebarItems.isEmpty ? null : (_, __)=>content,
       pane: sidebarItems.isEmpty
           ? null
           : NavigationPane(
